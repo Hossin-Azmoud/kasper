@@ -144,7 +144,6 @@ impl Location {
 
 }
 
-
 pub struct Token {
     pub  value:       String,
     pub  token_type:  TokenT,
@@ -429,26 +428,39 @@ impl<'a> KasperLexer<'a> {
                  
                 token.loc.change_loc(self.row, self.col);
                 
-                if c.is_alphabetic() {
+                if c.is_alphanumeric() {
                     self.collect_str(&mut token); // VARNAME__
-                    
-                    match &token.value as &str {
-                        DEFINE => {
+                    match token.value {
+                        String::from(DEFINE) => {
                             token.token_type = TokenT::KEY_WORD_DEFINE__;
                             return Ok(token);
                         },
                         _ => {
-                            if self.get_current() == OPAR {
+                            if self.get_current == OPAR {
                                 token.token_type = TokenT::FUNC_CALL__;
                                 self.chop();
                                 return Ok(token);
                             }
- 
+
+                            return Ok(token);
                         }
                     }
+                   /* 
+                    if self.get_current() == OPAR {
+                        if token.value == String::from() {
+                            token.token_type = TokenT::PRINT__;
+                            self.chop();
+                            return Ok(token);
+                        
+                        } else {
+                            let mut err_text = format!("{}:{}:{} Undefined function {}..", self.file_path, token.loc.row, token.loc.col, token.value);
+                            err_text    += &format!("maybe you meant: print?.");
+                            return Err(make_error(&err_text));
+                        }
+                    }*/
                 }
                 
-                if c.is_digit(10) {
+                if c.is_digit(10) { 
                     self.collect_number(&mut token);
                 }
 
@@ -476,7 +488,6 @@ pub fn match_lexer_token(res: Result<Token, io::Error>) -> Token {
 pub struct KasperParser<'a> {
     pub lexer: KasperLexer<'a>,
     str_map: HashMap<String, String>,
-    int_map: HashMap<String, i32>,
 }
 
 impl<'a> KasperParser<'a> {
@@ -484,8 +495,7 @@ impl<'a> KasperParser<'a> {
      pub fn new(lex: KasperLexer<'a>) -> Self {
         return KasperParser {
             lexer: lex,
-            str_map: HashMap::new(),
-            int_map: HashMap::new(),
+            str_map: HashMap<String , String> = HashMap::new(),
         };
     }
 
@@ -494,69 +504,37 @@ impl<'a> KasperParser<'a> {
         let mut token: Token = match_lexer_token(self.lexer.next());
         
         if token.token_type != TokenT::COMMENT__ && token.token_type != TokenT::NONE__ {        
-            if token.token_type == TokenT::FUNC_CALL__ {
-                if token.value == String::from(PRINT) {
-                    return self.parse_print();
-                }
-                
-                let err = format!("{} is not defined", token.value);
-                return Err(make_error(&err));
+            if token.token_type == TokenT::PRINT__ {
+                return self.parse_print()
             }
-
             if token.token_type == TokenT::KEY_WORD_DEFINE__ {
                 return self.parse_def();
             }
-
-           return Ok(());
-
+            token.display_token();
+            
+            return Ok(());
         } else {
+            token.display_token();
             return Ok(());
         }
     }    
     
     pub fn parse_def(&mut self) -> Result<(), io::Error>{
-        let mut token = match_lexer_token(self.lexer.next());
         
-        if token.token_type == TokenT::VARNAME__ {
-            let var_name = token.value;
-            token = match_lexer_token(self.lexer.next());
-
-            if token.token_type == TokenT::EQUAL__ {
-                
-                token = match_lexer_token(self.lexer.next());
-                if token.token_type == TokenT::NUMBER__ || token.token_type == TokenT::STRING__ {
-                    
-                    if token.token_type == TokenT::NUMBER__ {
-                        let v = token.value.parse::<i32>().unwrap();
-                        self.int_map.insert(var_name.to_string(), v);
-                        return Ok(());
-                    }
-
-                    if token.token_type == TokenT::STRING__ {
-                        self.str_map.insert(var_name.to_string(), token.value);    
-                        return Ok(());
-                    }
-                }
-                
-                
-                let err = format!("{}:{} Synatx error in define statement!", self.lexer.row, self.lexer.col, );
-                return Err(make_error(&err));
-            }
-            return Ok(())
-        }
-
-        let err = format!("{}: {} Synatx error in define statement, var name expected.", self.lexer.row, self.lexer.col);
-        return Err(make_error(&err));
-
-
     }
 
     pub fn parse_print(&mut self) -> Result<(), io::Error> {
-        let token = match_lexer_token(self.lexer.next());         
+        let token = match_lexer_token(self.lexer.next());
+        
+        if match_lexer_token(self.lexer.next()).token_type == TokenT::OPAR__ {
+                
+        }
         
         if token.token_type == TokenT::STRING__ {
             // Get the print value.
-            let val = token.value.clone();    
+            let val = token.value.clone();
+            
+            
             
             if match_lexer_token(self.lexer.next()).token_type == TokenT::CPAR__ {
                 println!("{}", val);
@@ -566,28 +544,11 @@ impl<'a> KasperParser<'a> {
             // Error
             let mut err_text = format!("{}:{}:{} unclosed parent found {} expected )..\n", self.lexer.file_path, token.loc.row, token.loc.col, token.value);
             err_text    += &format!("maybe you meant: print?.");
+
             return Err(make_error(&err_text));
             
         }
-        
-        if token.token_type == TokenT::VARNAME__ {
-            let k = &token.value;
-            if self.int_map.contains_key(k) {
-                let v = &self.int_map[k];
-                println!("{}", v);
-                return Ok(());
-            }
-
-            if self.str_map.contains_key(k) {
-                let v = &self.str_map[k];
-                println!("{}", v);
-                return Ok(());
-            }
-            
-            let err_text = format!("{}:{} {} is not defined.\n", token.loc.row, token.loc.col, k);
-            return Err(make_error(&err_text));
-        }
-
+    
         return Ok(());
     }
 }

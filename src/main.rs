@@ -1,5 +1,5 @@
-pub mod Lexer;
-use crate::Lexer::*;
+pub mod lexer;
+use crate::lexer::*;
 use std::env;
 use std::io;
 
@@ -20,37 +20,20 @@ fn main() -> Result<(), io::Error> {
     }
     
     let src = &args[1];
+    // Plugin the parser with the lexer. 
+    let lex: KasperLexer = KasperLexer::new(&src);
+    let mut parser: KasperParser = KasperParser::new(lex);
+   parser.lexer.read()?;
     
-    let mut lex: KasperLexer = KasperLexer::new(&src);
-
-    // lex.display();
-    lex.read()?;
-    let mut token;
-    
-    while lex.is_not_empty() {
-        token = match_lexer_token(lex.next()); 
-        if token.token_type != TokenT::COMMENT__ && token.token_type != TokenT::NONE__ {        
-           if token.token_type == TokenT::PRINT__ {
-                token = match_lexer_token(lex.next());
-                if token.token_type == TokenT::STRING__ {
-                    let val = token.value.clone();
-                    
-                    if match_lexer_token(lex.next()).token_type == TokenT::CPAR__ {
-                        println!("{}", val);
-                        continue;
-                    } else {
-                        let mut err_text = format!("{}:{}:{} unclosed parent found {} expected )..", lex.file_path, token.loc.row, token.loc.col, token.value);
-                        err_text    += &format!("maybe you meant: print?.");
-                        println!("{}", err_text);
-                        return Ok(());
-                    }            
-                }             
+    while parser.lexer.is_not_empty() {
+        match parser.parse_lexer() {
+            Ok(())   => continue,
+            Err(e) => {
+                println!("{}", e);
+                return Ok(());
             }
-
-            token.display_token();
         }
     }
 
     return Ok(());
 }
-
