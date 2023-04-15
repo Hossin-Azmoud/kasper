@@ -23,9 +23,11 @@ fn main() -> Result<(), io::Error> {
     // Plugin the parser with the lexer. 
     let lex: KasperLexer = KasperLexer::new(&src);
     let mut parser: KasperParser = KasperParser::new(lex);
-   parser.lexer.read()?;
-    
+    parser.lexer.read()?;
+    let it: usize = 0;
+
     while parser.lexer.is_not_empty() {
+        println!("Iteration number: {}", it);
         match parser.parse_lexer() {
             Ok(())   => continue,
             Err(e) => {
@@ -37,3 +39,4 @@ fn main() -> Result<(), io::Error> {
 
     return Ok(());
 }
+

@@ -1,4 +1,3 @@
-
 #[allow(non_snake_case, dead_code)]
 use std::fs::File;
 use std::io;
@@ -7,27 +6,36 @@ use std::fmt;
 use std::collections::HashMap;
 use std::process::exit;
 
-pub const DQUOTE:    char   = '\"';
-pub const SQUOTE:    char   = '\'';
-pub const SPACE:     char  = ' ';
-pub const NL:        char  = '\n';
-pub const OPAR:      char  = '(';
-pub const CPAR:      char  = ')';
-pub const OCURLY:    char  = '{';
-pub const CCURLY:    char  = '}';
-pub const PLUS:      char  = '+';
-pub const MINUS:     char  = '-';
-pub const COMA:      char  = ',';
-pub const SEMICOLON: char  = ';';
-pub const EQUAL:     char  = '=';
-pub const GT:        char  = '>';
-pub const LT:        char  = '<';
-pub const QM:        char  = '!';
-pub const COMMENT:   char  = '/';
-pub const ESCAPE:    char  = '\\';
-pub const PRINT:     &str  = "print";
-pub const DEFINE:    &str  = "define";
-pub const PROCC:     &str  = "process";
+pub const DQUOTE:     char   = '\"';
+pub const SQUOTE:     char   = '\'';
+pub const SPACE:      char  = ' ';
+pub const NL:         char  = '\n';
+pub const OPAR:       char  = '(';
+pub const CPAR:       char  = ')';
+pub const OCURLY:     char  = '{';
+pub const CCURLY:     char  = '}';
+pub const PLUS:       char  = '+';
+pub const MINUS:      char  = '-';
+pub const COMA:       char  = ',';
+pub const SEMICOLON:  char  = ';';
+pub const EQUAL:      char  = '=';
+pub const GT:         char  = '>';
+pub const LT:         char  = '<';
+pub const QM:         char  = '!';
+pub const COMMENT:    char  = '/';
+pub const ESCAPE:     char  = '\\';
+pub const PRINT:      &str  = "print";
+pub const DEFINE:     &str  = "define";
+pub const PROCC:      &str  = "process";
+pub const THIN_ARROW: &str  = "->";
+pub const FAT_ARROW:  &str  = "=>";
+// TYPLES:
+pub const STRING:     &str  = "string"; 
+pub const INT:        &str  = "int";
+
+fn not_implemented(label: &str) {
+    println!("{}", label);
+}
 
 pub fn make_error(text: &str) -> io::Error { 
     return io::Error::new(io::ErrorKind::Other, text);    
@@ -35,7 +43,6 @@ pub fn make_error(text: &str) -> io::Error {
 
 #[derive(Copy, Clone, PartialEq)]
 #[allow(dead_code)]
-
 pub enum TokenT {
     // Special tokens.
     COMMENT__,
@@ -53,16 +60,24 @@ pub enum TokenT {
     GT__,
     LT__,
     QM__,
+    THIN_ARROW__,
+    FAT_ARROW__,
+
 
     // Other
     NONE__,
     NUMBER__,
     STRING__,
     VARNAME__,
-    
-    // Built-in functions.
+
+    // Types
+    INT_T,
+    STRING_T,
+    // Built-ins + funcs..
     FUNC_CALL__,
     PRINT__,
+    
+    // Key words.
     KEY_WORD_DEFINE__,
     KEY_WORD_PROCESS__,
 }
@@ -93,35 +108,40 @@ fn make_token_table() -> HashMap<char, TokenT> {
 impl fmt::Display for TokenT {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let printable = match *self {
-            TokenT::NONE__      => "NONE__",
-            TokenT::DQUOTE__    => "DQUOTE__",
-            TokenT::SQUOTE__    => "SQUOTE__",
-            TokenT::OPAR__      => "OPAR__",
-            TokenT::CPAR__      => "CPAR__",
-            TokenT::OCURLY__    => "OCURLY__",
-            TokenT::CCURLY__    => "CCURLY__",
-            TokenT::PLUS__      => "PLUS__",
-            TokenT::MINUS__     => "MINUS__",
-            TokenT::COMA__      => "COMA__",
-            TokenT::SEMICOLON__ => "SEMICOLON__",
-            TokenT::EQUAL__     => "EQUAL__",
-            TokenT::GT__        => "GT__",
-            TokenT::LT__        => "LT__",
-            TokenT::NUMBER__    => "NUMBER__",
-            TokenT::STRING__    => "STRING__",
-            TokenT::QM__        => "QM__",
-            TokenT::VARNAME__   => "VARNAME__",
-            TokenT::COMMENT__   => "COMMENT__",
-            TokenT::PRINT__     => "PRINT__",
+            TokenT::NONE__             => "NONE__",
+            TokenT::DQUOTE__           => "DQUOTE__",
+            TokenT::SQUOTE__           => "SQUOTE__",
+            TokenT::OPAR__             => "OPAR__",
+            TokenT::CPAR__             => "CPAR__",
+            TokenT::OCURLY__           => "OCURLY__",
+            TokenT::CCURLY__           => "CCURLY__",
+            TokenT::PLUS__             => "PLUS__",
+            TokenT::MINUS__            => "MINUS__",
+            TokenT::COMA__             => "COMA__",
+            TokenT::SEMICOLON__        => "SEMICOLON__",
+            TokenT::EQUAL__            => "EQUAL__",
+            TokenT::GT__               => "GT__",
+            TokenT::LT__               => "LT__",
+            TokenT::NUMBER__           => "NUMBER__",
+            TokenT::STRING__           => "STRING__",
+            TokenT::QM__               => "QM__",
+            TokenT::VARNAME__          => "VARNAME__",
+            TokenT::COMMENT__          => "COMMENT__",
+            TokenT::PRINT__            => "PRINT__",
             TokenT::KEY_WORD_DEFINE__  => "KEY_WORD_DEFINE__",
             TokenT::KEY_WORD_PROCESS__ => "KEY_WORD_PROCESS__", 
+            TokenT::THIN_ARROW__       => "THIN_ARROW__",
+            TokenT::FAT_ARROW__        => "FAT_ARROW__",
             TokenT::FUNC_CALL__        => "FUNC_CALL__",
+            TokenT::STRING_T           => "STRING_T",
+            TokenT::INT_T              => "INT_T",
         }; 
      
         write!(f, "{}", printable)
     }
 }
 
+#[derive(Clone)]
 pub struct Location {
     pub row: usize,
     pub col: usize,
@@ -144,7 +164,7 @@ impl Location {
 
 }
 
-
+#[derive(Clone)]
 pub struct Token {
     pub  value:       String,
     pub  token_type:  TokenT,
@@ -206,7 +226,8 @@ impl<'a> KasperLexer<'a> {
     }
 
 
-    pub fn get_char(&mut self, index: usize) -> char {   
+    pub fn get_char(&mut self, index: usize) -> char {
+        self.trim_spaces_left();
         
         if self.is_not_empty() {
             return char::from(self.source[index]);
@@ -297,7 +318,7 @@ impl<'a> KasperLexer<'a> {
         return Ok(());
     }
     
-    pub fn write_to_token(&mut self, token: &mut Token, type_: TokenT, c: char) {        
+    pub fn write_to_token(&mut self, token: &mut Token, type_: TokenT, c: char) { 
         token.write(c);
         token.token_type = type_;
         self.chop();
@@ -307,10 +328,30 @@ impl<'a> KasperLexer<'a> {
         if self.token_table.contains_key(&c) {
             let t = self.token_table[&c];
             
+            if t == TokenT::MINUS__ {
+                if self.get_next() == GT {
+                    // ->
+                    self.write_to_token(token, TokenT::FAT_ARROW__, GT);
+                    self.chop();
+                    return;
+                }
+            }
+            
+            if t == TokenT::EQUAL__ {
+                if self.get_next() == GT {
+                    // =>
+                    self.write_to_token(token, TokenT::THIN_ARROW__, GT);
+                    self.chop();
+                    return;
+                }
+            }
+
+                        
             if t != TokenT::DQUOTE__ {
                 self.write_to_token(token, t, c);
                 return;
             }
+
             token.token_type = t;
             self.chop();
             return;
@@ -330,6 +371,7 @@ impl<'a> KasperLexer<'a> {
         }
 
         if c.is_ascii_punctuation() {
+            
             if c == COMMENT {
                 let result = self.handle_comment(&mut c, token);
                 match result {
@@ -341,6 +383,7 @@ impl<'a> KasperLexer<'a> {
             token.write(c);
             token.token_type = TokenT::NONE__;
             self.chop();
+        
         }
 
         return Ok(());
@@ -437,13 +480,21 @@ impl<'a> KasperLexer<'a> {
                             token.token_type = TokenT::KEY_WORD_DEFINE__;
                             return Ok(token);
                         },
+                        INT => {
+                            token.token_type = TokenT::INT_T;
+                            return Ok(token);
+                        },
+                        STRING => {
+                            token.token_type = TokenT::STRING_T;
+                            return Ok(token);
+                        },
+
                         _ => {
                             if self.get_current() == OPAR {
                                 token.token_type = TokenT::FUNC_CALL__;
                                 self.chop();
                                 return Ok(token);
                             }
- 
                         }
                     }
                 }
@@ -472,11 +523,49 @@ pub fn match_lexer_token(res: Result<Token, io::Error>) -> Token {
     }
 
 }
+#[warn(dead_code)]
+pub struct Variable {
+    name:             String,
+    value:            String,
+    var_parsed_type:  TokenT,
+    declared_type:    TokenT,
+    
+}
+
+impl Variable { 
+    pub fn new(nm: String, v: String, dt: TokenT, pt: TokenT) -> Self {
+        Self {
+            name: nm,
+            value: v,
+            var_parsed_type: pt,
+            declared_type: dt,
+        }
+    }
+    
+    pub fn empty() -> Self {
+        Self {
+            name: "".to_string(),
+            value: "".to_string(),
+            var_parsed_type: TokenT::NONE__,
+            declared_type: TokenT::NONE__,
+        }
+    }
+    
+    pub fn parse_as_i32(&mut self) -> i32 {
+        not_implemented("Variable::parse_as_i32()");
+        0
+    }
+
+    pub fn is_number(&mut self) -> bool {
+        not_implemented("Variable::is_number()");
+        false
+    }
+}
 
 pub struct KasperParser<'a> {
     pub lexer: KasperLexer<'a>,
     str_map: HashMap<String, String>,
-    int_map: HashMap<String, i32>,
+    int_map: HashMap<String, i32>, // 32 bit..
 }
 
 impl<'a> KasperParser<'a> {
@@ -491,15 +580,16 @@ impl<'a> KasperParser<'a> {
 
     pub fn parse_lexer(&mut self) -> Result<(), io::Error> {
         
-        let mut token: Token = match_lexer_token(self.lexer.next());
-        
+        let token: Token = match_lexer_token(self.lexer.next());
         if token.token_type != TokenT::COMMENT__ && token.token_type != TokenT::NONE__ {        
+            
             if token.token_type == TokenT::FUNC_CALL__ {
                 if token.value == String::from(PRINT) {
                     return self.parse_print();
                 }
                 
-                let err = format!("{} is not defined", token.value);
+                let err = format!("{}:{}:{} {} is not defined", self.lexer.file_path, token.loc.col, token.loc.row, token.value);
+
                 return Err(make_error(&err));
             }
 
@@ -514,41 +604,126 @@ impl<'a> KasperParser<'a> {
         }
     }    
     
-    pub fn parse_def(&mut self) -> Result<(), io::Error>{
-        let mut token = match_lexer_token(self.lexer.next());
+    pub fn defined(&mut self, key: &String) -> bool {
+        return self.int_map.contains_key(key) || self.str_map.contains_key(key);
+    }
+    
+    pub fn parse_arithmatic(&mut self, dst_key: &String) -> Result<(), io::Error> {
+        if self.defined(dst_key) {
+
+            let mut token = match_lexer_token(self.lexer.next());        
+            match token.token_type {
+                TokenT::PLUS__ => {
+                    token = match_lexer_token(self.lexer.next());
+                    let v = token.value.parse::<i32>().unwrap();
+                    
+                    if let Some(var) = self.int_map.get_mut(dst_key) {
+                        *var += v;
+                    }
+
+                    return Ok(());
+                },
+                TokenT::MINUS__ => {
+
+                    token = match_lexer_token(self.lexer.next());
+                    let v = token.value.parse::<i32>().unwrap();
+                    if let Some(var) = self.int_map.get_mut(dst_key) {
+                        *var -= v;
+                    }
+
+                    return Ok(());
+                },
+                _ => todo!(),
+            }
+        }
+        
+        let err = format!("{}:{} Undefined variable {}", self.lexer.row, self.lexer.col, dst_key.to_string());
+        return Err(make_error(&err));
+    }
+
+    pub fn parse_lhs(&mut self) -> Result<Variable, io::Error> {
+        // Parses the type of the variable and makes room for it.
+        let mut var   = Variable::empty();
+        let mut token = match_lexer_token(self.lexer.next()); 
         
         if token.token_type == TokenT::VARNAME__ {
-            let var_name = token.value;
-            token = match_lexer_token(self.lexer.next());
-
-            if token.token_type == TokenT::EQUAL__ {
+            var.name = token.value;
+                        
+            token = match_lexer_token(self.lexer.next()); // ->
+            
+            if token.token_type == TokenT::THIN_ARROW__ {
+                token = match_lexer_token(self.lexer.next()); // ->
                 
-                token = match_lexer_token(self.lexer.next());
-                if token.token_type == TokenT::NUMBER__ || token.token_type == TokenT::STRING__ {
-                    
-                    if token.token_type == TokenT::NUMBER__ {
-                        let v = token.value.parse::<i32>().unwrap();
-                        self.int_map.insert(var_name.to_string(), v);
-                        return Ok(());
-                    }
-
-                    if token.token_type == TokenT::STRING__ {
-                        self.str_map.insert(var_name.to_string(), token.value);    
-                        return Ok(());
-                    }
+                if token.token_type == TokenT::STRING_T {
+                    var.declared_type = TokenT::STRING_T;
+                    self.str_map.insert(var.name.clone(), "".to_string());
+                    return Ok(var);
                 }
-                
-                
-                let err = format!("{}:{} Synatx error in define statement!", self.lexer.row, self.lexer.col, );
+
+                if token.token_type == TokenT::INT_T {
+                    var.declared_type = TokenT::INT_T;
+                    self.int_map.insert(var.name.clone(), 0);
+                    return Ok(var);
+                }
+
+                let err = format!("{}:{} unsupported type {}", token.loc.row, token.loc.col, token.value);
                 return Err(make_error(&err));
             }
-            return Ok(())
+
+            let err = format!("{}:{} expected -> but found {}", token.loc.row, token.loc.col, token.value);
+            return Err(make_error(&err));
+ 
         }
 
-        let err = format!("{}: {} Synatx error in define statement, var name expected.", self.lexer.row, self.lexer.col);
+        let err = format!("{}:{} expected variable name, found {} instead.", token.loc.row, token.loc.col, token.token_type);
         return Err(make_error(&err));
+     
+    }
 
+    pub fn register_var(&mut self, variable: Variable) -> Result<(), io::Error>{
+        
+        let token = match_lexer_token(self.lexer.next());
+        // Declared int so we are expecting a number.
+        if variable.declared_type == TokenT::INT_T && token.token_type == TokenT::NUMBER__ {
+             
+            let v = token.value.parse::<i32>().unwrap();            
 
+            if let Some(var) = self.int_map.get_mut(&variable.name) {
+                *var = v;
+            }
+            
+            return Ok(());
+        }
+
+        if variable.declared_type == TokenT::STRING_T && token.token_type == TokenT::STRING__ {
+            
+            if let Some(var) = self.str_map.get_mut(&variable.name) {
+                *var = token.value;
+            }
+
+            return Ok(());
+        }
+        
+        let err = format!("{}:{} expected value of type {} but found type {}", token.loc.row, token.loc.col, variable.declared_type, token.token_type);
+        return Err(make_error(&err));
+    }
+
+    pub fn parse_def(&mut self) -> Result<(), io::Error>{
+        match self.parse_lhs() {
+            Ok(variable) => {
+                // successs parsing the type..
+                if self.lexer.get_next() == EQUAL {
+                    // Assign variable. = val.
+                    self.lexer.chop();
+                    return self.register_var(variable);
+                } else {
+                    return Ok(());
+                }
+            },
+
+            Err(e) => return Err(e),
+            _ => panic!("unreachable!"),
+        } 
     }
 
     pub fn parse_print(&mut self) -> Result<(), io::Error> {
@@ -559,7 +734,7 @@ impl<'a> KasperParser<'a> {
             let val = token.value.clone();    
             
             if match_lexer_token(self.lexer.next()).token_type == TokenT::CPAR__ {
-                println!("{}", val);
+                print!("{}", val);
                 return Ok(());
             }
             
@@ -572,6 +747,7 @@ impl<'a> KasperParser<'a> {
         
         if token.token_type == TokenT::VARNAME__ {
             let k = &token.value;
+            
             if self.int_map.contains_key(k) {
                 let v = &self.int_map[k];
                 println!("{}", v);
