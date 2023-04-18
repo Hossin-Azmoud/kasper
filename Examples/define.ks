@@ -1,9 +1,9 @@
 
 // define var_name = val 
-define name  = "Hossin."
-define age   = 23
-define name2 = "khalid"
-define age2  = 4294969496
+define name  -> string = "Hossin."
+define age   -> int    = 23
+define name2 -> string = "khalid"
+define age2  -> int    = 20
 
 
 
