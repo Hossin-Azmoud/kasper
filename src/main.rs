@@ -1,5 +1,7 @@
-pub mod lexer;
-use crate::lexer::*;
+pub mod Lexer;
+
+use crate::Lexer::*;
+
 use std::env;
 use std::io;
 
