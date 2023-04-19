@@ -605,23 +605,167 @@ impl Variable {
     }
 }
 
+pub struct Stack<'a> {
+    str_map: HashMap<String, String>,
+    int_map_8: HashMap<String, i8>, // 8 bit..
+    int_map_16: HashMap<String, i16>, // 16 bit..
+    int_map: HashMap<String, i32>, // 32 bit..
+    int_map_64: HashMap<String, i64>, // 64 bit..
+    int_map_128: HashMap<String, i128>, // 128 bit..
+    int_map_8_array: HashMap<String, Vec<i8>>, // 8 bit..
+    int_map_16_array: HashMap<String, Vec<i16>>, // 16 bit..
+    int_map_array: HashMap<String, Vec<i32>>, // 32 bit..
+    int_map_64_array: HashMap<String, Vec<i64>>, // 64 bit..
+    int_map_128_array: HashMap<String, Vec<i128>>, // 128 bit..                                
+}
+
+impl Stack {
+    pub fn new() -> Self {
+        Self {
+            str_map:            HashMap::new(), 
+            int_map_8:          HashMap::new(),
+            int_map_16:         HashMap::new(),
+            int_map:            HashMap::new(),
+            int_map_64:         HashMap::new(),
+            int_map_128:        HashMap::new(),
+            int_map_8_array:    HashMap::new(),
+            int_map_16_array:   HashMap::new(),
+            int_map_array:      HashMap::new(), 
+            int_map_64_array:   HashMap::new(),             
+            int_map_128_array:  HashMap::new(),
+        }
+    }
+    
+    pub fn get_from_str_map(&mut self, key: String) -> Option<&String> {
+        if self.str_map.contains_key(&key) {
+            return Some(self.str_map[&key]);
+        }
+
+        return None; 
+    }  
+     
+    pub fn get_from_int_map_8(&mut self, key: String) -> Option<&i8> {
+        if self.int_map_8.contains_key(&key) {
+            return Some(self.int_map_8[&key]);
+        }
+
+        return None; 
+    }  
+     
+    pub fn get_from_int_map_16(&mut self, key: String) -> Option<&i16> {
+        if self.int_map_16.contains_key(&key) {
+            return Some(self.int_map_16[&key]);
+        }       
+    
+       return None; 
+    }  
+     
+    pub fn get_from_int_map(&mut self, key: String) -> Option<&i32> {
+        if self.int_map.contains_key(&key) {
+            return Some(self.int_map[&key]);
+        }  
+
+        return None; 
+    }  
+     
+    pub fn get_from_int_map_64(&mut self, key: String) -> Option<&i64> {
+        
+        if self.int_map_64.contains_key(&key) {
+            return Some(self.int_map_64[&key]);
+        }  
+
+        return None; 
+    }  
+     
+    pub fn get_from_int_map_128(&mut self, key: String) -> Option<&i128> {
+        if self.int_map_128.contains_key(&key) {
+            return Some(self.int_map_128[&key]);
+        }  
+    
+        return None; 
+    }  
+     
+    pub fn get_from_int_map_8_array(&mut self, key: String) -> Option<&Vec<i8>> {
+        if self.int_map_8_array.contains_key(&key) {
+            return Some(&self.int_map_8_array[&key]);
+        }
+    
+        return None; 
+    }  
+     
+    pub fn get_from_int_map_16_array(&mut self, key: String) -> Option<&Vec<i16>> {
+        if self.int_map_16_array.contains_key(&key) {
+            return Some(&self.int_map_16_array[&key]);
+        }
+    
+        return None; 
+    }  
+     
+    pub fn get_from_int_map_array(&mut self, key: String) -> Option<&Vec<i32>> {
+        if self.int_map.contains_key(&key) {
+            return Some(&self.int_map[&key]);
+        }
+    
+        return None; 
+    }  
+     
+    pub fn get_from_int_map_64_array(&mut self, key: String) -> Option<&Vec<i64>> {
+        if self.int_map_64_array.contains_key(&key) {
+            return Some(&self.int_map_64_array[&key]);
+        }
+
+        return None; 
+    }  
+     
+    pub fn get_from_int_map_128_array(&mut self, key: String) -> Option<&Vec<i128>> {
+        if self.int_map_128_array.contains_key(&key) {
+            return Some(&self.int_map_128_array[&key]);
+        }
+        
+        return None; 
+    }      
+}
+
 pub struct KasperParser<'a> {
     pub lexer: KasperLexer<'a>,
-    str_map: HashMap<String, String>,
-    int_map: HashMap<String, i32>, // 32 bit..
-    int_map_64: HashMap<String, i64>, // 32 bit..
-
+    stack: Stack,
 }
+
+
 
 impl<'a> KasperParser<'a> {
     
      pub fn new(lex: KasperLexer<'a>) -> Self {
-        return KasperParser {
+        Self {
             lexer: lex,
-            str_map: HashMap::new(),
-            int_map: HashMap::new(),
-            int_map_64: HashMap::new(),
+            stack: Stack::new(),
         };
+    }
+    
+    pub fn get_str_var(&mut self, key: String) Option<&String> {
+        if self.str_map.contains_key(&key) {
+            return Some(&self.str_map[&key]);
+        }
+        
+        return None
+    }
+
+    pub fn get_int_var(&mut self, key: String, type_: TokenT) Option<&String>{
+        
+        match type_ {
+            TokenT::INT_T => {
+                if self.int_map.contains_key(&key) {
+                   return Some(&self.int_map[&key]); // 32
+                }
+            },
+            TokenT::INT_T_64 => {
+                if self.int_map_64.contains_key(&key) {
+                   return Some(&self.int_map_64[&key]); // I64
+                }
+            }
+        }
+        
+        return None
     }
 
     pub fn parse_lexer(&mut self) -> Result<(), io::Error> {
@@ -730,6 +874,24 @@ impl<'a> KasperParser<'a> {
             *var *= number;
         }
 
+    }
+    
+    pub fn divide(&mut self, variable_name: String, number: i32) {
+        if let Some(var) = self.int_map.get_mut(&variable_name) {
+            *var /= number;
+        }
+    }
+    
+    pub fn bit_shift_left(&mut self, variable_name: String, bits: i32) {
+        if let Some(var) = self.int_map.get_mut(&variable_name) {
+            *var = (*var << bits);
+        }
+    }
+
+    pub fn bit_shift_right(&mut self, variable_name: String, bits: i32) {
+        if let Some(var) = self.int_map.get_mut(&variable_name) {
+            *var = (*var >> bits);
+        }
     }
 
     pub fn register_var(&mut self, variable: Variable) -> Result<(), io::Error>{
@@ -876,5 +1038,5 @@ impl<'a> KasperParser<'a> {
 
         return Ok(());
     }
-}
 
+}
