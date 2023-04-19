@@ -1,7 +1,11 @@
-pub mod Lexer;
+mod Lexer;
+mod KasperParser;
+mod Enums;
+mod Token;
+mod Stack;
 
 use crate::Lexer::*;
-
+use crate::KasperParser::KasperParser as KParser;
 use std::env;
 use std::io;
 
@@ -26,7 +30,7 @@ fn main() -> Result<(), io::Error> {
     let src = &args[1];
     // Plugin the parser with the lexer. 
     let lex: KasperLexer = KasperLexer::new(&src);
-    let mut parser: KasperParser = KasperParser::new(lex);
+    let mut parser: KParser = KParser::new(lex);
     parser.lexer.read()?;
     
     while parser.lexer.is_not_empty() {

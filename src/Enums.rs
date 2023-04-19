@@ -1,17 +1,19 @@
 // ENUMS AND CONSTANTS.
 // USED BY THE PARSER FOR LOGIC MAPPING.
 //
-pub const UMAX_8_BIT:   u8    = (0xFF);
-pub const UMAX_16_BIT:  u16   = (0xFFFF);
-pub const UMAX_32_BIT:  u32   = (0xFFFFFFFF);
-pub const UMAX_64_BIT:  u64   = (0xFFFFFFFFFFFFFFFF);
-pub const UMAX_128_BIT: u128  = (0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
+use std::fmt;
 
-pub const MAX_8_BIT:   i8    = (UMAX_8_BIT   >> 1);
-pub const MAX_16_BIT:  i16   = (UMAX_16_BIT  >> 1);
-pub const MAX_32_BIT:  i32   = (UMAX_32_BIT  >> 1);
-pub const MAX_64_BIT:  i64   = (UMAX_64_BIT  >> 1);
-pub const MAX_128_BIT: i128  = (UMAX_128_BIT >> 1); // >> Division by two.
+pub const UMAX_8_BIT:   u8    = 0xFF;
+pub const UMAX_16_BIT:  u16   = 0xFFFF;
+pub const UMAX_32_BIT:  u32   = 0xFFFFFFFF;
+pub const UMAX_64_BIT:  u64   = 0xFFFFFFFFFFFFFFFF;
+pub const UMAX_128_BIT: u128  = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
+
+pub const MAX_8_BIT:   i8    = 0x7F; // 127
+pub const MAX_16_BIT:  i16   = 0x7FFF;
+pub const MAX_32_BIT:  i32   = 0x7FFFFFFF;
+pub const MAX_64_BIT:  i64   = 0x7FFFFFFFFFFFFFFF;
+pub const MAX_128_BIT: i128  = 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // >> Division by two.
 
 pub const DQUOTE:     char  = '\"';
 pub const SQUOTE:     char  = '\'';

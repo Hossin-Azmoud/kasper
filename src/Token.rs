@@ -1,4 +1,5 @@
 // Token.
+use crate::Enums::TokenT;
 
 #[derive(Clone)]
 pub struct Location {

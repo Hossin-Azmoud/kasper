@@ -3,27 +3,20 @@
 use std::fs::File;
 use std::io;
 use std::io::Read;
-use std::fmt;
 use std::collections::HashMap;
 use std::process::exit;
 // CUSTOM.
 
-pub mod Enums;
-pub mod Token;
+use crate::Enums::*;
+use crate::Token::*;
 
-use Enums::*;
-use Token::*;
-
-fn not_implemented(label: &str) {
+pub fn not_implemented(label: &str) {
     println!("{}", label);
 }
 
 pub fn make_error(text: &str) -> io::Error { 
     return io::Error::new(io::ErrorKind::Other, text);    
 }
-// Seperate data from logic.
-
-
 
 fn make_token_table() -> HashMap<char, TokenT> {
     let mut map: HashMap<char ,TokenT> = HashMap::new();

@@ -1,8 +1,7 @@
-pub mod Enums;
-pub mod Stack;
-
-use Enums::*;
-use Stack::*;
+use std::io;
+use crate::Enums::*;
+use crate::Stack::*;
+use crate::Lexer::{not_implemented, KasperLexer, match_lexer_token, make_error};
 
 #[warn(dead_code)]
 pub struct Variable {
@@ -43,7 +42,23 @@ impl Variable {
     }
 }
 
+// STACK MAPS:
+/*
+ 
+str_map:           HashMap<String, String>,
+int_map_8:         HashMap<String, i8>, // 8 bit..
+int_map_16:        HashMap<String, i16>, // 16 bit..
+int_map:           HashMap<String, i32>, // 32 bit..
+int_map_64:        HashMap<String, i64>, // 64 bit..
+int_map_128:       HashMap<String, i128>, // 128 bit..
+int_map_8_array:   HashMap<String, Vec<i8>>, // 8 bit..
+int_map_16_array:  HashMap<String, Vec<i16>>, // 16 bit..
+int_map_array:     HashMap<String, Vec<i32>>, // 32 bit..
+int_map_64_array:  HashMap<String, Vec<i64>>, // 64 bit..
+int_map_128_array: HashMap<String, Vec<i128>>, // 128 bit..  
 
+
+*/
 pub struct KasperParser<'a> {
     pub lexer: KasperLexer<'a>,
     stack: Stack,
@@ -55,35 +70,10 @@ impl<'a> KasperParser<'a> {
         Self {
             lexer: lex,
             stack: Stack::new(),
-        };
+        }
     }
     
-    pub fn get_str_var(&mut self, key: String) Option<&String> {
-        if self.str_map.contains_key(&key) {
-            return Some(&self.str_map[&key]);
-        }
-        
-        return None
-    }
-
-    pub fn get_int_var(&mut self, key: String, type_: TokenT) Option<&String>{
-        
-        match type_ {
-            TokenT::INT_T => {
-                if self.int_map.contains_key(&key) {
-                   return Some(&self.int_map[&key]); // 32
-                }
-            },
-            TokenT::INT_T_64 => {
-                if self.int_map_64.contains_key(&key) {
-                   return Some(&self.int_map_64[&key]); // I64
-                }
-            }
-        }
-        
-        return None
-    }
-
+    
     pub fn parse_lexer(&mut self) -> Result<(), io::Error> {
         
         let token = match_lexer_token(self.lexer.next());        
@@ -112,9 +102,9 @@ impl<'a> KasperParser<'a> {
     
     pub fn defined(&mut self, key: &String) -> bool {
         return (
-               self.int_map.contains_key(key) 
-            || self.str_map.contains_key(key) 
-            || self.int_map_64.contains_key(key)
+               self.stack.int_map.contains_key(key) 
+            || self.stack.str_map.contains_key(key) 
+            || self.stack.int_map_64.contains_key(key)
         );
     }
     
@@ -139,19 +129,19 @@ impl<'a> KasperParser<'a> {
 
                 if token.token_type == TokenT::STRING_T {
                     var.declared_type = TokenT::STRING_T;
-                    self.str_map.insert(var.name.clone(), "".to_string());
+                    self.stack.str_map.insert(var.name.clone(), "".to_string());
                     return Ok(var);
                 }
 
                 if token.token_type == TokenT::INT_T {
                     var.declared_type = TokenT::INT_T;
-                    self.int_map.insert(var.name.clone(), 0);
+                    self.stack.int_map.insert(var.name.clone(), 0);
                     return Ok(var);
                 }
 
                 if token.token_type == TokenT::INT_T_64 {
                     var.declared_type = TokenT::INT_T_64;
-                    self.int_map_64.insert(var.name.clone(), 0);
+                    self.stack.int_map_64.insert(var.name.clone(), 0);
                     return Ok(var);
 
                 }
@@ -171,58 +161,32 @@ impl<'a> KasperParser<'a> {
     }
     
     pub fn add(&mut self, variable_name: String, number: i32) {
-        if let Some(var) = self.int_map.get_mut(&variable_name) {
+        if let Some(var) = self.stack.int_map.get_mut(&variable_name) {
             *var += number;
         }
     }
     
     pub fn sub(&mut self, variable_name: String, number: i32) {
         
-        if let Some(var) = self.int_map.get_mut(&variable_nam) {
+        if let Some(var) = self.stack.int_map.get_mut(&variable_name) {
             *var -= number;
         }    
  
     }
     
-    pub fn multiply(&mut self, variable_name: String, number: i32) {
-        
-        if let Some(var) = self.int_map.get_mut(&variable_name) {
-            *var *= number;
-        }
-
-    }
-    
-    pub fn divide(&mut self, variable_name: String, number: i32) {
-        if let Some(var) = self.int_map.get_mut(&variable_name) {
-            *var /= number;
-        }
-    }
-    
-    pub fn bit_shift_left(&mut self, variable_name: String, bits: i32) {
-        if let Some(var) = self.int_map.get_mut(&variable_name) {
-            *var = (*var << bits);
-        }
-    }
-
-    pub fn bit_shift_right(&mut self, variable_name: String, bits: i32) {
-        if let Some(var) = self.int_map.get_mut(&variable_name) {
-            *var = (*var >> bits);
-        }
-    }
-
-    pub fn register_var(&mut self, variable: Variable) -> Result<(), io::Error>{
+    pub fn register_var(&mut self, variable: Variable) -> Result<(), io::Error> {
         
         let mut token = match_lexer_token(self.lexer.next());
-        // Declared int so we are expecting a number.
+        
         if variable.declared_type == TokenT::INT_T && token.token_type == TokenT::NUMBER__ {
             let v = token.value.parse::<i32>().unwrap();
-            if let Some(var) = self.int_map.get_mut(&variable.name) {
+            if let Some(var) = self.stack.int_map.get_mut(&variable.name) {
                 *var = v;
             }
             
             token = match_lexer_token(self.lexer.next());
             
-            match token {
+            match token.token_type {
                 TokenT::PLUS__  => {
                     token = match_lexer_token(self.lexer.next());
                     match token.token_type {
@@ -236,6 +200,7 @@ impl<'a> KasperParser<'a> {
                         }
                     }
                 },
+                
                 TokenT::MINUS__ => {
                     token = match_lexer_token(self.lexer.next());
                     match token.token_type {
@@ -249,27 +214,18 @@ impl<'a> KasperParser<'a> {
                         }
                     }            
                 },
-                TokenT::MULT__  => {
-                    token = match_lexer_token(self.lexer.next());
-                    match token.token_type {
-                        TokenT::NUMBER__ => {
-                            let v = token.value.parse::<i32>().unwrap();
-                            self.multiply(variable.name, v);
-                        },
-                        _ => {
-                            let err = format!("{}:{} expected token type {} but got {}", token.loc.row, token.loc.col, TokenT::NUMBER__, token.token_type);
-                            return Err(make_error(&err));
-                        }
-                    }                
-                }, 
+                _ => {
+                        let err = format!("{}:{} expected token type {} but got {}", token.loc.row, token.loc.col, TokenT::NUMBER__, token.token_type);
+                        return Err(make_error(&err));
+                }
             }
-
             return Ok(());
         }
 
+
         if variable.declared_type == TokenT::STRING_T && token.token_type == TokenT::STRING__ {
             
-            if let Some(var) = self.str_map.get_mut(&variable.name) {
+            if let Some(var) = self.stack.str_map.get_mut(&variable.name) {
                 *var = token.value;
             }
 
@@ -279,7 +235,7 @@ impl<'a> KasperParser<'a> {
         if variable.declared_type == TokenT::INT_T_64 && token.token_type == TokenT::NUMBER__ {
             
             let v = token.value.parse::<i64>().unwrap();            
-            if let Some(var) = self.int_map_64.get_mut(&variable.name) {
+            if let Some(var) = self.stack.int_map_64.get_mut(&variable.name) {
                 *var = v;
             }
 
@@ -330,20 +286,20 @@ impl<'a> KasperParser<'a> {
         if token.token_type == TokenT::VARNAME__ {
             let k = &token.value;
             
-            if self.int_map.contains_key(k) {
-                let v = &self.int_map[k];
+            if self.stack.int_map.contains_key(k) {
+                let v = &self.stack.int_map[k];
                 println!("{}", v);
                 return Ok(());
             }
 
-            if self.str_map.contains_key(k) {
-                let v = &self.str_map[k];
+            if self.stack.str_map.contains_key(k) {
+                let v = &self.stack.str_map[k];
                 println!("{}", v);
                 return Ok(());
             }
             
-            if self.int_map_64.contains_key(k) {
-                let v = &self.int_map_64[k];
+            if self.stack.int_map_64.contains_key(k) {
+                let v = &self.stack.int_map_64[k];
                 println!("{}", v);
                 return Ok(());
             }
@@ -355,4 +311,3 @@ impl<'a> KasperParser<'a> {
         return Ok(());
     }
 }
-
