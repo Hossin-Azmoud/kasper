@@ -1,11 +1,11 @@
-mod Lexer;
-mod KasperParser;
-mod Enums;
-mod Token;
-mod Stack;
+mod lexer;
+mod kasper_parser;
+mod enums;
+mod token;
+mod stack;
 
-use crate::Lexer::*;
-use crate::KasperParser::KasperParser as KParser;
+use crate::lexer::*;
+use crate::kasper_parser::KasperParser as KParser;
 use std::env;
 use std::io;
 
@@ -67,7 +67,8 @@ fn test_lexer() -> Result<(), io::Error> {
     lex.read()?;
         
     while lex.is_not_empty() {
-        let mut nxt = lex.next();
+        let nxt = lex.next();
+        
         match nxt {
             Ok(mut token) => {
                 token.display_token();

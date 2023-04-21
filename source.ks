@@ -1,11 +1,18 @@
-define n 	-> int    = 1 
-define x 	-> int    = 2
-define name -> string = "...."
-define Host -> string = "192.168.11.10"
-define port -> int    = 8080
 
-print(name)
-print(x)
-print(n)
-print(Host)
-print(port)
+// Strings
+define variable -> string = "Hello, world"
+print(variable)
+variable = "Hello, Changed"
+print(variable)
+
+
+// Integer
+define speed -> i64 = 100 
+print(speed)
+speed = 101
+print(speed)
+
+// Boolean
+define exists -> bool = False
+print(exists)
+

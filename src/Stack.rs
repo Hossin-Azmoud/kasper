@@ -1,57 +1,73 @@
 // STACK.
 use std::collections::HashMap;
 
-/*
-
-trait Io<Key, Value> {
-    fn Set(&self, key: Key, Value) -> bool;
-    fn Get(&self, key: Key) -> Value;
-}
-
-*/
-
-pub struct Stack{
-    pub str_map: HashMap<String, String>,
-    pub int_map_8: HashMap<String, i8>, // 8 bit..
-    pub int_map_16: HashMap<String, i16>, // 16 bit..
-    pub int_map: HashMap<String, i32>, // 32 bit..
-    pub int_map_64: HashMap<String, i64>, // 64 bit..
+pub struct Stack {
+    pub bool_map:     HashMap<String, bool>,
+    pub str_map:     HashMap<String, String>,
+    pub int_map_8:   HashMap<String, i8>, // 8 bit..
+    pub int_map_16:  HashMap<String, i16>, // 16 bit..
+    pub int_map:     HashMap<String, i32>, // 32 bit.     
+    pub int_map_64:  HashMap<String, i64>, // 64 bit..
     pub int_map_128: HashMap<String, i128>, // 128 bit..
-    pub int_map_8_array: HashMap<String, Vec<i8>>, // 8 bit..
-    pub int_map_16_array: HashMap<String, Vec<i16>>, // 16 bit..
-    pub int_map_array: HashMap<String, Vec<i32>>, // 32 bit..
-    pub int_map_64_array: HashMap<String, Vec<i64>>, // 64 bit..
-    pub int_map_128_array: HashMap<String, Vec<i128>>, // 128 bit. 
 }
 
-
-
+#[allow(dead_code)]
 impl Stack {
     pub fn new() -> Self {
         Self {
+            bool_map:           HashMap::new(), 
             str_map:            HashMap::new(), 
             int_map_8:          HashMap::new(),
             int_map_16:         HashMap::new(),
             int_map:            HashMap::new(),
             int_map_64:         HashMap::new(),
             int_map_128:        HashMap::new(),
-            int_map_8_array:    HashMap::new(),
-            int_map_16_array:   HashMap::new(),
-            int_map_array:      HashMap::new(), 
-            int_map_64_array:   HashMap::new(),             
-            int_map_128_array:  HashMap::new(),
         }
     }
     
-    pub fn get_from_str_map(&mut self, key: String) -> Option<&String> {
-        if self.str_map.contains_key(&key) {
-            return Some(&self.str_map[&key]);
+    pub fn defined(&mut self, key: &String) -> bool {
+        return self.int_map.contains_key(key) 
+            || self.str_map.contains_key(key) 
+            || self.int_map_64.contains_key(key)
+            || self.bool_map.contains_key(key);
+    }
+    
+    pub fn get_from_bool_map(&mut self, key: &String) -> Option<&bool> {
+
+        if self.bool_map.contains_key(key) {
+            return Some(&self.bool_map[key]);
+        }  
+
+        return None; 
+    } 
+    
+    pub fn get_from_int_map_64(&mut self, key: &String) -> Option<&i64> {
+
+        if self.int_map_64.contains_key(key) {
+            return Some(&self.int_map_64[key]);
+        }  
+
+        return None; 
+    }  
+
+    pub fn get_from_int_map(&mut self, key: &String) -> Option<&i32> {
+        if self.int_map.contains_key(key) {
+            return Some(&self.int_map[key]);
+        }  
+
+        return None; 
+    }  
+    
+    pub fn get_from_str_map(&mut self, key: &String) -> Option<&String> {
+        
+        if self.str_map.contains_key(key) {
+            return Some(&self.str_map[key]);
         }
 
         return None; 
     }  
-     
-    pub fn get_from_int_map_8(&mut self, key: String) -> Option<&i8> {
+/* 
+    pub fn get_from_int_map_8(&mut self, key: &String) -> Option<&i8> {
         if self.int_map_8.contains_key(&key) {
             return Some(&self.int_map_8[&key]);
         }
@@ -59,76 +75,53 @@ impl Stack {
         return None; 
     }  
      
-    pub fn get_from_int_map_16(&mut self, key: String) -> Option<&i16> {
+    pub fn get_from_int_map_16(&mut self, key: &String) -> Option<&i16> {
         if self.int_map_16.contains_key(&key) {
             return Some(&self.int_map_16[&key]);
         } 
     
-       return None; 
+        return None;
     }  
      
-    pub fn get_from_int_map(&mut self, key: String) -> Option<&i32> {
-        if self.int_map.contains_key(&key) {
-            return Some(&self.int_map[&key]);
-        }  
-
-        return None; 
-    }  
-     
-    pub fn get_from_int_map_64(&mut self, key: String) -> Option<&i64> {
-        
-        if self.int_map_64.contains_key(&key) {
-            return Some(&self.int_map_64[&key]);
-        }  
-
-        return None; 
-    }  
-     
-    pub fn get_from_int_map_128(&mut self, key: String) -> Option<&i128> {
+    
+    
+    pub fn get_from_int_map_128(&mut self, key: &String) -> Option<&i128> {
         if self.int_map_128.contains_key(&key) {
             return Some(&self.int_map_128[&key]);
         }  
     
         return None; 
     }  
-     
-    pub fn get_from_int_map_8_array(&mut self, key: String) -> Option<&Vec<i8>> {
-        if self.int_map_8_array.contains_key(&key) {
-            return Some(&self.int_map_8_array[&key]);
-        }
+*/    
+    pub fn push_str_map(&mut self, key: &String, value: String) {
+         self.str_map.insert(key.clone(), value);
+    } 
     
-        return None; 
-    }  
-     
-    pub fn get_from_int_map_16_array(&mut self, key: String) -> Option<&Vec<i16>> {
-        if self.int_map_16_array.contains_key(&key) {
-            return Some(&self.int_map_16_array[&key]);
-        }
+    pub fn push_bool_map(&mut self, key: &String, value: bool) {
+         self.bool_map.insert(key.clone(), value);
+    } 
     
-        return None; 
+    pub fn push_int_map(&mut self, key: &String, value: i32) {
+        self.int_map.insert(key.clone(), value);
     }  
-     
-    pub fn get_from_int_map_array(&mut self, key: String) -> Option<&Vec<i32>> {
-        if self.int_map.contains_key(&key) {
-            return Some(&self.int_map_array[&key]);
-        }
     
-        return None; 
+    pub fn push_int_map_64(&mut self, key: &String, value: i64) {
+        self.int_map_64.insert(key.clone(), value);
     }  
-     
-    pub fn get_from_int_map_64_array(&mut self, key: String) -> Option<&Vec<i64>> {
-        if self.int_map_64_array.contains_key(&key) {
-            return Some(&self.int_map_64_array[&key]);
-        }
 
-        return None; 
+    /*     
+    pub fn set_int_map_8(&mut self, key: String, value: i8) {
+        self.int_map_8.insert(key, value);
     }  
      
-    pub fn get_from_int_map_128_array(&mut self, key: String) -> Option<&Vec<i128>> {
-        if self.int_map_128_array.contains_key(&key) {
-            return Some(&self.int_map_128_array[&key]);
-        }
-        
-        return None; 
-    }   
+    pub fn set_int_map_16(&mut self, key: String, value: i16) {
+        self.int_map_16.insert(key, value);
+    }  
+     
+    
+         
+    pub fn set_int_map_128(&mut self, key: String, value: i128) {
+        self.int_map_128.insert(key, value);
+    }
+*/
 }

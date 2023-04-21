@@ -1,8 +1,8 @@
 // ENUMS AND CONSTANTS.
-// USED BY THE PARSER FOR LOGIC MAPPING.
-//
-use std::fmt;
 
+use std::fmt;
+/*
+#[allow(dead_code, unused_variables)]
 pub const UMAX_8_BIT:   u8    = 0xFF;
 pub const UMAX_16_BIT:  u16   = 0xFFFF;
 pub const UMAX_32_BIT:  u32   = 0xFFFFFFFF;
@@ -14,7 +14,8 @@ pub const MAX_16_BIT:  i16   = 0x7FFF;
 pub const MAX_32_BIT:  i32   = 0x7FFFFFFF;
 pub const MAX_64_BIT:  i64   = 0x7FFFFFFFFFFFFFFF;
 pub const MAX_128_BIT: i128  = 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // >> Division by two.
-
+*/
+#[allow(dead_code, unused_variables)]
 pub const DQUOTE:     char  = '\"';
 pub const SQUOTE:     char  = '\'';
 pub const SPACE:      char  = ' ';
@@ -39,13 +40,17 @@ pub const DEFINE:     &str  = "define";
 pub const PROCC:      &str  = "process";
 pub const THIN_ARROW: &str  = "->"; 
 pub const FAT_ARROW:  &str  = "=>"; 
+
 // TYPLES:
 pub const STRING:     &str  = "string"; 
 pub const INT:        &str  = "int";
-pub const INT_64:        &str  = "i64";
+pub const INT_64:     &str  = "i64";
+pub const BOOL:       &str  = "bool";
+pub const BOOL_TRUE:  &str  = "True";
+pub const BOOL_FALSE: &str  = "False";
 
 #[derive(Copy, Clone, PartialEq)]
-#[allow(dead_code)]
+#[allow(non_camel_case_types, dead_code)]
 pub enum TokenT {
     // Special tokens.
     COMMENT__,
@@ -72,12 +77,17 @@ pub enum TokenT {
     NUMBER__,
     STRING__,
     VARNAME__,
+    
+    // primitives
+    BOOL_TRUE__,
+    BOOL_FALSE__,
 
     // Types
     INT_T,
     INT_T_64,
     STRING_T,
-
+    BOOL_T,
+    
     // Built-ins + funcs..
     FUNC_CALL__,
     PRINT__,
@@ -119,6 +129,10 @@ impl fmt::Display for TokenT {
             TokenT::INT_T              => "INT_T",
             TokenT::INT_T_64           => "INT_64",
             TokenT::MULT__             => "MULT__",
+            TokenT::BOOL_T             => "BOOL_T",
+            TokenT::BOOL_TRUE__        => "BOOL_TRUE__",
+            TokenT::BOOL_FALSE__        => "BOOL_FALSE_",
+
         }; 
      
         write!(f, "{}", printable)

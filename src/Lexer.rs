@@ -7,8 +7,8 @@ use std::collections::HashMap;
 use std::process::exit;
 // CUSTOM.
 
-use crate::Enums::*;
-use crate::Token::*;
+use crate::enums::*;
+use crate::token::*;
 
 pub fn not_implemented(label: &str) {
     println!("{}", label);
@@ -53,6 +53,7 @@ pub struct KasperLexer<'a> {
 } 
 
 
+#[allow(dead_code)]
 impl<'a> KasperLexer<'a> {
     
     pub fn new(path: &'a str) -> Self    
@@ -351,6 +352,19 @@ impl<'a> KasperLexer<'a> {
                         },
                         INT_64 => {
                             token.token_type = TokenT::INT_T_64;
+                            return Ok(token);
+                        },
+                        BOOL => {
+                            token.token_type = TokenT::BOOL_T;
+                            return Ok(token);
+                        },
+                        BOOL_TRUE => {
+                            token.token_type = TokenT::BOOL_TRUE__;
+                            return Ok(token);
+
+                        },
+                        BOOL_FALSE => {
+                            token.token_type = TokenT::BOOL_FALSE__;
                             return Ok(token);
                         },
                         _ => {
