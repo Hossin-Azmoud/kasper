@@ -1,6 +1,7 @@
 # kasper
 Dynamically typed programming language in Rust.
 
+
 ## Hello, world.
 - Build the program with cargo.
 ```console
@@ -15,4 +16,22 @@ print("Hello, Kasper.")
  $ kasper source
  Hello, Kasper.
 ```
+
+## How to
+
+- Variable declaration:
+```python
+define name -> T
+```
+_ Variable assignement:
+```python
+name = value
+```
+
+## Examples
+
+
+
+
+
 

@@ -10,7 +10,6 @@ pub struct Variable {
     value:            String,
     var_parsed_type:  TokenT,
     declared_type:    TokenT,
-    
 }
 
 #[allow(dead_code)]
@@ -82,10 +81,9 @@ impl<'a> KasperParser<'a> {
         
         let mut token = match_lexer_token(self.lexer.next());        
         
-        if token.token_type != TokenT::COMMENT__ && token.token_type != TokenT::NONE__ {        
-
+        if token.token_type != TokenT::COMMENT__ && token.token_type != TokenT::NONE__ { 
             if token.token_type == TokenT::FUNC_CALL__ {
-                if token.value == String::from(PRINT) {
+                if token.value == String::from(WRITE) {
                     return self.parse_print();
                 }
 
@@ -100,13 +98,70 @@ impl<'a> KasperParser<'a> {
             if token.token_type == TokenT::VARNAME__ { // var
                 return self.assign_variable(&mut token); 
             }
-
+            
+            if token.token_type == TokenT::IF__ {
+                if let Ok(skip) = self.parse_branching() {
+                    todo!("Not Implemented");
+                        
+                }
+            }
            return Ok(());
 
         }
 
         return Ok(());
     
+    }
+    
+    pub fn parse_condition(&mut self) -> Result<bool, io::Error> {
+        let mut parsed_condition: bool = true;
+        let mut token: Token           = match_lexer_token(self.lexer.next());
+        
+        if token.token_type == TokenT::VARNAME__ {
+            
+            if self.stack.defined(&token.value) {
+                
+                not_implemented("Condition are not Implemented yet!");
+            }
+
+            let err = format!("{}:{}:{} {} is Undefined", 
+                          self.lexer.file_path, 
+                          token.loc.row, 
+                          token.loc.col, 
+                          token.value
+                    );
+
+            return Err(make_error(&err));
+        }
+        
+        if token.token_type == TokenT::NUMBER__  {
+            
+            not_implemented("Condition are not Implemented yet!");
+            let lhs: i128 = token.value.parse::<i128>().unwrap(); // LHS
+            let tmp = match_lexer_token(self.lexer.next());
+            
+        }        
+        
+        if token.token_type == TokenT::STRING__  {
+            not_implemented("Condition are not Implemented yet!");
+        }
+        
+        return Ok(true);
+    }
+
+    pub fn parse_branching(&mut self) -> Result<bool, io::Error>{
+        // if | x == 0 | { ... } else { ... }
+        let mut token = match_lexer_token(self.lexer.next());    
+        
+        if token.token_type == TokenT::PIPE__ {
+            match self.parse_condition() {
+                Ok(v) => return Ok(v),
+                Err(e) => return Err(e),
+            }
+        }
+
+        let err = format!("{}:{}:{} expected a pipe | but got {} instead", self.lexer.file_path, token.loc.row, token.loc.col, token.value);
+        return Err(make_error(&err));
     }
     
     pub fn assign_variable(&mut self, token: &mut Token) -> Result<(), io::Error> {
@@ -248,7 +303,6 @@ impl<'a> KasperParser<'a> {
         }
         
         if variable.declared_type == TokenT::INT_T_64 && token.token_type == TokenT::NUMBER__ {
-            
             let v = token.value.parse::<i64>().unwrap();            
             self.stack.push_int_map_64(&variable.name, v);
             return Ok(());
@@ -305,33 +359,33 @@ impl<'a> KasperParser<'a> {
         
         if token.token_type == TokenT::VARNAME__ {
             let k = &token.value;
-            
+             
             if self.stack.int_map.contains_key(k) {
                 let v = &self.stack.int_map[k];
-                println!("{}", v);
+                print!("{}", v);
                 return Ok(());
             }
 
             if self.stack.str_map.contains_key(k) {
                 let v = &self.stack.str_map[k];
-                println!("{}", v);
+                print!("{}", v);
                 return Ok(());
             }
             
             if self.stack.int_map_64.contains_key(k) {
                 let v = &self.stack.int_map_64[k];
-                println!("{}", v);
+                print!("{}", v);
                 return Ok(());
             }
             
             if self.stack.bool_map.contains_key(k) {
                 let v = &self.stack.bool_map[k];
                 if *v {
-                    println!("{}", BOOL_TRUE);
+                    print!("{}", BOOL_TRUE);
                     return Ok(());
                 }
                 
-                println!("False");
+                print!("False");
                 return Ok(());
             }
 

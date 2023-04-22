@@ -16,38 +16,52 @@ pub const MAX_64_BIT:  i64   = 0x7FFFFFFFFFFFFFFF;
 pub const MAX_128_BIT: i128  = 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // >> Division by two.
 */
 #[allow(dead_code, unused_variables)]
-pub const DQUOTE:     char  = '\"';
-pub const SQUOTE:     char  = '\'';
-pub const SPACE:      char  = ' ';
-pub const NL:         char  = '\n';
-pub const OPAR:       char  = '(';
-pub const CPAR:       char  = ')';
-pub const OCURLY:     char  = '{';
-pub const CCURLY:     char  = '}';
-pub const PLUS:       char  = '+';
-pub const MULT:       char  = '*';
-pub const MINUS:      char  = '-';
-pub const COMA:       char  = ',';
-pub const SEMICOLON:  char  = ';';
-pub const EQUAL:      char  = '=';
-pub const GT:         char  = '>';
-pub const LT:         char  = '<';
-pub const QM:         char  = '!';
-pub const COMMENT:    char  = '/';
-pub const ESCAPE:     char  = '\\';
-pub const PRINT:      &str  = "print";
-pub const DEFINE:     &str  = "define";
-pub const PROCC:      &str  = "process";
-pub const THIN_ARROW: &str  = "->"; 
-pub const FAT_ARROW:  &str  = "=>"; 
+pub const DQUOTE:         char  = '\"';
+pub const SQUOTE:         char  = '\'';
+pub const SPACE:          char  = ' ';
+pub const NL:             char  = '\n';
+pub const TAB:            char  = '\t';
+pub const RE:             char  = '\r';
+pub const NULLC:           char  = '\0';
+pub const OPAR:           char  = '(';
+pub const CPAR:           char  = ')';
+pub const OCURLY:         char  = '{';
+pub const CCURLY:         char  = '}';
+pub const PLUS:           char  = '+';
+pub const MULT:           char  = '*';
+pub const MINUS:          char  = '-';
+pub const COMA:           char  = ',';
+pub const SEMICOLON:      char  = ';';
+pub const EQUAL:          char  = '=';
+pub const GT:             char  = '>';
+pub const LT:             char  = '<';
+pub const QM:             char  = '!';
+pub const COMMENT:        char  = '/';
+pub const PIPE:           char  = '|';
+pub const ESCAPE:         char  = '\\';
+pub const THIN_ARROW:     &str  = "->"; 
+pub const FAT_ARROW:      &str  = "=>"; 
+
+// Comparison operators.
+pub const COMP_EQ:        &str  = "==";
+pub const COMP_NOT_EQ:    &str  = "=!";
+pub const COMP_LT_EQ:     &str  = "<=";
+pub const COMP_GT_EQ:     &str  = ">=";
 
 // TYPLES:
 pub const STRING:     &str  = "string"; 
 pub const INT:        &str  = "int";
 pub const INT_64:     &str  = "i64";
 pub const BOOL:       &str  = "bool";
+
+// Key words
+pub const WRITE:      &str  = "write";
+pub const DEFINE:     &str  = "define";
+pub const PROCC:      &str  = "process";
 pub const BOOL_TRUE:  &str  = "True";
 pub const BOOL_FALSE: &str  = "False";
+pub const IF:          &str  = "if";
+pub const ELSE:        &str  = "else";
 
 #[derive(Copy, Clone, PartialEq)]
 #[allow(non_camel_case_types, dead_code)]
@@ -71,13 +85,19 @@ pub enum TokenT {
     QM__,
     THIN_ARROW__,
     FAT_ARROW__,
-
+    PIPE__,
     // Other
     NONE__,
     NUMBER__,
     STRING__,
     VARNAME__,
-    
+    // Comparison operators
+    COMP_EQ__,
+    COMP_NOT_EQ__,
+    COMP_LT_EQ__,
+    COMP_GT_EQ__,
+
+
     // primitives
     BOOL_TRUE__,
     BOOL_FALSE__,
@@ -90,11 +110,13 @@ pub enum TokenT {
     
     // Built-ins + funcs..
     FUNC_CALL__,
-    PRINT__,
+    WRITE__,
     
     // Key words.
     KEY_WORD_DEFINE__,
     KEY_WORD_PROCESS__,
+    ELSE__,
+    IF__,
 }
 
 impl fmt::Display for TokenT {
@@ -119,7 +141,7 @@ impl fmt::Display for TokenT {
             TokenT::QM__               => "QM__",
             TokenT::VARNAME__          => "VARNAME__",
             TokenT::COMMENT__          => "COMMENT__",
-            TokenT::PRINT__            => "PRINT__",
+            TokenT::WRITE__            => "WRITE__",
             TokenT::KEY_WORD_DEFINE__  => "KEY_WORD_DEFINE__",
             TokenT::KEY_WORD_PROCESS__ => "KEY_WORD_PROCESS__", 
             TokenT::THIN_ARROW__       => "THIN_ARROW__",
@@ -131,11 +153,18 @@ impl fmt::Display for TokenT {
             TokenT::MULT__             => "MULT__",
             TokenT::BOOL_T             => "BOOL_T",
             TokenT::BOOL_TRUE__        => "BOOL_TRUE__",
-            TokenT::BOOL_FALSE__        => "BOOL_FALSE_",
-
+            TokenT::BOOL_FALSE__       => "BOOL_FALSE_",
+            TokenT::IF__               => "IF__",
+            TokenT::ELSE__             => "ELSE__",
+            TokenT::COMP_EQ__          => "COMP_EQ__", 
+            TokenT::COMP_NOT_EQ__      => "COMP_NOT_EQ__", 
+            TokenT::COMP_LT_EQ__       => "COMP_LT_EQ__", 
+            TokenT::COMP_GT_EQ__       => "COMP_GT_EQ__", 
+            TokenT::PIPE__             => "PIPE__",      
         }; 
-     
-        write!(f, "{}", printable)
-    }
+        
+        return write!(f, "{}", printable)
+    }      
 }
+
 

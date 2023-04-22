@@ -5,13 +5,14 @@ use std::io;
 use std::io::Read;
 use std::collections::HashMap;
 use std::process::exit;
-// CUSTOM.
 
+// CUSTOM.
 use crate::enums::*;
 use crate::token::*;
 
 pub fn not_implemented(label: &str) {
     println!("{}", label);
+    exit(0);
 }
 
 pub fn make_error(text: &str) -> io::Error { 
@@ -37,6 +38,7 @@ fn make_token_table() -> HashMap<char, TokenT> {
     map.insert(GT, TokenT::GT__);
     map.insert(LT, TokenT::LT__);
     map.insert(QM, TokenT::QM__);
+    map.insert(PIPE, TokenT::PIPE__);
 
     // Return the map.
     map
@@ -129,11 +131,7 @@ impl<'a> KasperLexer<'a> {
         Ok(())
     }
     
-    pub fn make_error(&mut self, text: &str) -> io::Error { 
-        return io::Error::new(io::ErrorKind::Other, text);
-    
-    }
-    
+   
     pub fn handle_comment(&mut self, c: &mut char,token: &mut Token)  -> Result<(), io::Error> {
         
         // write '/' then remove it?
@@ -307,18 +305,56 @@ impl<'a> KasperLexer<'a> {
         match res {
             Err(e) => return Err(e),
             Ok(()) => {
-                let mut c: char = self.get_current();
+                let mut prev: char = self.get_prev();
+                let mut c: char    = self.get_current();
                 
                 if token.token_type == TokenT::DQUOTE__ {
                     while self.is_not_empty() {
+                        if prev == ESCAPE {
+                            match c {
+                                '\"' => {
+                                    token.write(DQUOTE);
+                                },
+                                '\'' => {
+                                    token.write(SQUOTE);
+
+                                },
+                                '\\' => {
+                                    token.write(ESCAPE);
+                                },
+                                'n' => {
+                                    token.write(NL);
+                                },
+                                't' => {
+                                    token.write(TAB);
+                                },
+                                'r' => {
+                                    token.write(RE);
+                                },
+                                '0' => {
+                                    token.write(NULLC);
+                                },
+                                _ => {
+                                    todo!("Unreachable!, if the escape sequence is not completed.");
+                                }
+                            }
+                            
+                            self.chop();
+                            prev = c.clone();
+                            c = self.get_current();
+                        }
+
                         if c == DQUOTE {
                             token.token_type = TokenT::STRING__;
                             self.chop();
                             return Ok(token);
                         }
-
-                        token.write(c);
+                        if c != ESCAPE {
+                            token.write(c);
+                        }
+                        
                         self.chop();
+                        prev = c.clone();
                         c = self.get_current();
                     }
                     
@@ -367,6 +403,36 @@ impl<'a> KasperLexer<'a> {
                             token.token_type = TokenT::BOOL_FALSE__;
                             return Ok(token);
                         },
+                        IF => {
+                            token.token_type = TokenT::IF__;
+                            return Ok(token);
+ 
+                        },
+                        ELSE => {
+                            token.token_type = TokenT::ELSE__;
+                            return Ok(token);
+ 
+                        },
+                        COMP_EQ => {
+                            token.token_type = TokenT::COMP_EQ__;
+                            return Ok(token);
+ 
+                        },
+                        COMP_NOT_EQ => {
+                            token.token_type = TokenT::COMP_NOT_EQ__;
+                            return Ok(token);
+ 
+                        },
+                        COMP_LT_EQ => {
+                            token.token_type = TokenT::COMP_LT_EQ__;
+                            return Ok(token);
+ 
+                        },
+                        COMP_GT_EQ => {
+                            token.token_type = TokenT::COMP_GT_EQ__;
+                            return Ok(token);
+ 
+                        }
                         _ => {
                             if self.get_current() == OPAR {
                                 token.token_type = TokenT::FUNC_CALL__;

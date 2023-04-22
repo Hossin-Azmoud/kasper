@@ -1,17 +1,22 @@
 
-// define var_name = val 
+// define string 
 define name  -> string = "Hossin."
-define age   -> int    = 23
-define name2 -> string = "khalid"
-define age2  -> int    = 20
 
+// define int (32 bit)
+define x  -> int = 32
 
+// define i64 (64 bit)
+define y  -> i64 = 64
 
-print("---------------------------------------------")
+// define bool
+define t -> bool = True
+define f -> bool = False
 
-print(age)
 print(name)
-print(age2)
-print(name2)
+print(x)
+print(y)
+print(t)
+print(f)
 
-print("---------------------------------------------")
+
+
