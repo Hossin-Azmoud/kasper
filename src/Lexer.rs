@@ -9,40 +9,7 @@ use std::process::exit;
 // CUSTOM.
 use crate::enums::*;
 use crate::token::*;
-
-pub fn not_implemented(label: &str) {
-    println!("{}", label);
-    exit(0);
-}
-
-pub fn make_error(text: &str) -> io::Error { 
-    return io::Error::new(io::ErrorKind::Other, text);    
-}
-
-fn make_token_table() -> HashMap<char, TokenT> {
-    let mut map: HashMap<char ,TokenT> = HashMap::new();
-    
-    //Adding all the keys. 
-    map.insert(DQUOTE, TokenT::DQUOTE__);
-    map.insert(SQUOTE, TokenT::SQUOTE__);
-    map.insert(OPAR, TokenT::OPAR__);
-    map.insert(CPAR, TokenT::CPAR__);
-    map.insert(OCURLY, TokenT::OCURLY__);
-    map.insert(CCURLY, TokenT::CCURLY__);
-    map.insert(PLUS, TokenT::PLUS__);
-    map.insert(MINUS, TokenT::MINUS__);
-    map.insert(MULT,TokenT::MULT__);
-    map.insert(COMA, TokenT::COMA__);
-    map.insert(SEMICOLON, TokenT::SEMICOLON__);
-    map.insert(EQUAL, TokenT::EQUAL__);
-    map.insert(GT, TokenT::GT__);
-    map.insert(LT, TokenT::LT__);
-    map.insert(QM, TokenT::QM__);
-    map.insert(PIPE, TokenT::PIPE__);
-
-    // Return the map.
-    map
-}
+use crate::util::make_error;
 
 pub struct KasperLexer<'a> {
     pub file_path: &'a str,
@@ -74,7 +41,8 @@ impl<'a> KasperLexer<'a> {
 
     pub fn get_char(&mut self, index: usize) -> char { 
         
-        if self.is_not_empty() {
+        if self.is_not_empty()
+        {
             return char::from(self.source[index]);
         }
 
@@ -82,7 +50,11 @@ impl<'a> KasperLexer<'a> {
     }
     
     pub fn get_prev(&mut self) -> char {
-        return self.get_char(self.cur - 1);
+        if self.cur > 0 {
+            return self.get_char(self.cur - 1);
+        } else {
+            return self.get_char(0);
+        }
     }
 
     pub fn get_current(&mut self) -> char {
@@ -130,32 +102,65 @@ impl<'a> KasperLexer<'a> {
         self.size = self.source.len();        
         Ok(())
     }
-    
-   
-    pub fn handle_comment(&mut self, c: &mut char,token: &mut Token)  -> Result<(), io::Error> {
+/*    
+    pub fn read_block(&mut self) -> io::Result<Token, io::Error> {
+        let mut token: Token = match_lexer_token(self.next());
+        if token.token_type != TokenT::OCURLY__ {
+            let err = format!("READING THE BLOCK FAILED. read_block()\r reason: You need to read in a state of block start {");
+            return Err(make_error(&err));
+        } 
         
-        // write '/' then remove it?
-        token.token_type = TokenT::COMMENT__;
-        token.write(*c);
-        self.chop();
+        let mut opening_loc = token.loc.clone();
+        
+        if token.token_type != TokenT::CCURLY__ && self.is_not_empty() {
+            token = match_lexer_token(self.next());
+        }
+                
+    }
+    
+    pub fn skip_block(&mut self) -> io::Result<(), io::Error> {
+        let mut token: Token = match_lexer_token(self.next());
+        let mut opening_loc = token.loc.clone();
 
-        *c = self.get_current();
+        if token.token_type != TokenT::OCURLY__ {
+            let err = format!("READING THE BLOCK FAILED. read_block()\r reason: You need to read in a state of block start {");
+            return Err(make_error(&err));
+        } 
+        
+        while token.token_type != TokenT::CCURLY__ && self.is_not_empty() {
+            token = match_lexer_token(self.next()); 
+        }
+
+        if token.token_type != TokenT::CCURLY__ {
+            
+            let err = format!("{}:{}:{} unclosed scope", 
+                              self.file_path, 
+                              opening_loc.row, 
+                              opening_loc.col
+                       );
+
+            return Err(make_error(&err));
+        }
+        
+    }
+*/   
+    pub fn handle_comment(&mut self,token: &mut Token)  -> Result<(), io::Error> {
+        let mut c: char = self.get_current();
         
         // check for '/' in the next char, if it is not '/' then error.
         
-        if *c != COMMENT {
-            let mut err_text = format!("expected // but found | {} |\n", *c);
-            err_text     += &format!("you can solve this by replacing {} with //", *c);
-            return Err(make_error(&err_text));
-        }
- 
-        // COMMENT
-        while *c != NL {
-            token.write(*c);
-            self.chop();
-            *c = self.get_current();
+        if c == DIV {
+            token.token_type = TokenT::COMMENT__; 
+
+            while c != NL {
+                token.write(c);
+                self.chop();
+                c = self.get_current();
+            }
         }
 
+ 
+        // COMMENT
         return Ok(());
     }
     
@@ -213,19 +218,17 @@ impl<'a> KasperLexer<'a> {
         
         if self.token_table.contains_key(&c) {
             self.write_to_special_token(token, c);
+            
+            if token.token_type == TokenT::DIV__ {
+                let result = self.handle_comment(token);
+            }
+            
             return Ok(());
         }
 
         if c.is_ascii_punctuation() {
             
-            if c == COMMENT {
-                let result = self.handle_comment(&mut c, token);
-                match result {
-                    Ok(()) => return Ok(()),
-                    Err(e) => return Err(e)
-                }
-            };
-            
+           
             token.write(c);
             token.token_type = TokenT::NONE__;
             self.chop();
@@ -455,13 +458,11 @@ impl<'a> KasperLexer<'a> {
 
 
 pub fn match_lexer_token(res: Result<Token, io::Error>) -> Token {
-    
     match res {
         Ok(token) => {
             return token;        
         },
         Err(e) => {
-            println!("Hi");
             println!("{}", e);
             exit(1);
         }

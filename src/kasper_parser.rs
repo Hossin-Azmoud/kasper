@@ -1,7 +1,9 @@
+// TODO: Parse complex arithmatics.
 use std::io;
 use crate::enums::*;
 use crate::stack::*;
-use crate::lexer::{ not_implemented, KasperLexer, match_lexer_token, make_error };
+use crate::lexer::{ KasperLexer, match_lexer_token };
+use crate::util::{ not_implemented, make_error };
 use crate::token::Token;
 
 #[allow(dead_code)]
@@ -76,7 +78,7 @@ impl<'a> KasperParser<'a> {
         }
     }
     
-    
+        
     pub fn parse_lexer(&mut self) -> Result<(), io::Error> {
         
         let mut token = match_lexer_token(self.lexer.next());        
@@ -98,13 +100,27 @@ impl<'a> KasperParser<'a> {
             if token.token_type == TokenT::VARNAME__ { // var
                 return self.assign_variable(&mut token); 
             }
-            
+/*
             if token.token_type == TokenT::IF__ {
-                if let Ok(skip) = self.parse_branching() {
-                    todo!("Not Implemented");
-                        
+                match self.parse_branching() {
+                    Ok(v) => {
+                        // if v is true, then we parse this branch and skip the ELSE.
+                        if v {
+                            token = match_lexer_token(self.lexer.next()); 
+                            
+                            if token.token_type != TokenT::OCURLY__ {
+                                not_implemented("branching mechanism is not impl!");
+                            }
+
+                        } else { 
+                            not_implemented("branching mechanism is not impl!");
+                        }
+                        // if v is false, then we parse the next branch and skip this one.
+                    },
+                    Err(e) => return Err(e),
                 }
             }
+*/
            return Ok(());
 
         }
@@ -115,13 +131,31 @@ impl<'a> KasperParser<'a> {
     
     pub fn parse_condition(&mut self) -> Result<bool, io::Error> {
         let mut parsed_condition: bool = true;
-        let mut token: Token           = match_lexer_token(self.lexer.next());
+        let token: Token           = match_lexer_token(self.lexer.next());
         
         if token.token_type == TokenT::VARNAME__ {
-            
+            // Parse the codition that is inside.
             if self.stack.defined(&token.value) {
+                // | x |
+
+                if self.lexer.get_next() == PIPE {
+                    println!("Found Pipe!");
+                    self.lexer.chop(); // Chop the pipe.
+                    
+                    if let Some(v) = self.stack.get_from_bool_map(&token.value) {
+                        return Ok(*v);
+                    }
+
+                }
                 
-                not_implemented("Condition are not Implemented yet!");
+                let err = format!("{}:{}:{} expected a PIPE (|) but found {}", 
+                          self.lexer.file_path, 
+                          token.loc.row, 
+                          token.loc.col,
+                          token.value
+                    );
+
+                return Err(make_error(&err));
             }
 
             let err = format!("{}:{}:{} {} is Undefined", 
@@ -151,7 +185,7 @@ impl<'a> KasperParser<'a> {
 
     pub fn parse_branching(&mut self) -> Result<bool, io::Error>{
         // if | x == 0 | { ... } else { ... }
-        let mut token = match_lexer_token(self.lexer.next());    
+        let token = match_lexer_token(self.lexer.next());    
         
         if token.token_type == TokenT::PIPE__ {
             match self.parse_condition() {
@@ -159,7 +193,7 @@ impl<'a> KasperParser<'a> {
                 Err(e) => return Err(e),
             }
         }
-
+        
         let err = format!("{}:{}:{} expected a pipe | but got {} instead", self.lexer.file_path, token.loc.row, token.loc.col, token.value);
         return Err(make_error(&err));
     }
@@ -358,38 +392,17 @@ impl<'a> KasperParser<'a> {
         }
         
         if token.token_type == TokenT::VARNAME__ {
-            let k = &token.value;
-             
-            if self.stack.int_map.contains_key(k) {
-                let v = &self.stack.int_map[k];
-                print!("{}", v);
+            
+            let k = &token.value; 
+                        
+            if self.stack.print_variable(k) {
                 return Ok(());
             }
 
-            if self.stack.str_map.contains_key(k) {
-                let v = &self.stack.str_map[k];
-                print!("{}", v);
-                return Ok(());
-            }
-            
-            if self.stack.int_map_64.contains_key(k) {
-                let v = &self.stack.int_map_64[k];
-                print!("{}", v);
-                return Ok(());
-            }
-            
-            if self.stack.bool_map.contains_key(k) {
-                let v = &self.stack.bool_map[k];
-                if *v {
-                    print!("{}", BOOL_TRUE);
-                    return Ok(());
-                }
-                
-                print!("False");
-                return Ok(());
-            }
-
-            let err_text = format!("{}:{} {} is not defined.\n", token.loc.row, token.loc.col, k);
+            let err_text = format!("{}:{} {} is not defined.\n", 
+                                   token.loc.row, 
+                                   token.loc.col, 
+                                   k);
             return Err(make_error(&err_text));
         }
 

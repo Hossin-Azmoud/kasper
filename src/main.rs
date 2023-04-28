@@ -3,14 +3,43 @@ mod kasper_parser;
 mod enums;
 mod token;
 mod stack;
+mod util;
+mod condition;
+mod expr_parser;
 
+use crate::expr_parser::ArithmaticParser as AP;
 use crate::lexer::*;
 use crate::kasper_parser::KasperParser as KParser;
 use std::env;
 use std::io;
 
+
+
+
+
+
 #[allow(unused_variables)]
 fn main() -> Result<(), io::Error> {
+    
+    let src: &str = "source.ks";
+
+    let mut lex: KasperLexer = KasperLexer::new(&src);
+    let mut parser: AP = AP::new(&mut lex);
+    
+    parser.lex.read()?;   
+    
+    match parser.postfix() {
+        Ok(()) => println!("Success!"),
+        Err(e) => println!("{}", e),
+    }
+
+    return Ok(());
+}
+
+
+
+#[allow(unused_variables)]
+fn main4() -> Result<(), io::Error> {
     // return test_lexer();
     // Command line args
     
@@ -18,13 +47,11 @@ fn main() -> Result<(), io::Error> {
     let program = &args[0];
     
     if args.len() < 2 {
-        
         println!("---------------------------------");
         println!("The File path was not provided.");
         println!("Usage: {} <path>", program);
         println!("---------------------------------");
         return Ok(());
-
     }
     
     let src = &args[1];

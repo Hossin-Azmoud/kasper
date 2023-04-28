@@ -1,6 +1,7 @@
 // ENUMS AND CONSTANTS.
 
 use std::fmt;
+use std::collections::HashMap;
 /*
 #[allow(dead_code, unused_variables)]
 pub const UMAX_8_BIT:   u8    = 0xFF;
@@ -27,16 +28,19 @@ pub const OPAR:           char  = '(';
 pub const CPAR:           char  = ')';
 pub const OCURLY:         char  = '{';
 pub const CCURLY:         char  = '}';
+
 pub const PLUS:           char  = '+';
 pub const MULT:           char  = '*';
 pub const MINUS:          char  = '-';
+pub const DIV:            char  = '/';
+pub const POW:            char  = '^';
+
 pub const COMA:           char  = ',';
 pub const SEMICOLON:      char  = ';';
 pub const EQUAL:          char  = '=';
 pub const GT:             char  = '>';
 pub const LT:             char  = '<';
 pub const QM:             char  = '!';
-pub const COMMENT:        char  = '/';
 pub const PIPE:           char  = '|';
 pub const ESCAPE:         char  = '\\';
 pub const THIN_ARROW:     &str  = "->"; 
@@ -63,11 +67,13 @@ pub const BOOL_FALSE: &str  = "False";
 pub const IF:          &str  = "if";
 pub const ELSE:        &str  = "else";
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Hash, Eq)]
 #[allow(non_camel_case_types, dead_code)]
 pub enum TokenT {
     // Special tokens.
+    DIV__,
     COMMENT__,
+    POW__,
     DQUOTE__,
     SQUOTE__,
     OPAR__,
@@ -140,6 +146,7 @@ impl fmt::Display for TokenT {
             TokenT::STRING__           => "STRING__",
             TokenT::QM__               => "QM__",
             TokenT::VARNAME__          => "VARNAME__",
+            TokenT::DIV__              => "DIV__",
             TokenT::COMMENT__          => "COMMENT__",
             TokenT::WRITE__            => "WRITE__",
             TokenT::KEY_WORD_DEFINE__  => "KEY_WORD_DEFINE__",
@@ -161,10 +168,56 @@ impl fmt::Display for TokenT {
             TokenT::COMP_LT_EQ__       => "COMP_LT_EQ__", 
             TokenT::COMP_GT_EQ__       => "COMP_GT_EQ__", 
             TokenT::PIPE__             => "PIPE__",      
+            TokenT::POW__              => "POW__,",
         }; 
         
         return write!(f, "{}", printable)
     }      
 }
 
+pub fn make_token_table() -> HashMap<char, TokenT> {
+    let mut map: HashMap<char ,TokenT> = HashMap::new();
+    
+    //Adding all the keys. 
+    map.insert(DQUOTE,    TokenT::DQUOTE__);
+    map.insert(SQUOTE,    TokenT::SQUOTE__);
+    map.insert(OPAR,      TokenT::OPAR__);
+    map.insert(CPAR,      TokenT::CPAR__);
+    map.insert(OCURLY,    TokenT::OCURLY__);
+    map.insert(CCURLY,    TokenT::CCURLY__);
+    
+    map.insert(PLUS,      TokenT::PLUS__);
+    map.insert(MINUS,     TokenT::MINUS__);
+    map.insert(MULT,      TokenT::MULT__);
+    map.insert(DIV,       TokenT::DIV__);
+    map.insert(POW,       TokenT::POW__);
+    
 
+
+    map.insert(COMA,      TokenT::COMA__);
+    map.insert(SEMICOLON, TokenT::SEMICOLON__);
+    map.insert(EQUAL,     TokenT::EQUAL__);
+    map.insert(GT,        TokenT::GT__);
+    map.insert(LT,        TokenT::LT__);
+    map.insert(QM,        TokenT::QM__);
+    map.insert(PIPE,      TokenT::PIPE__);
+
+    // Return the map.
+    map
+}
+
+
+pub fn make_prec_table() -> HashMap<String, i32> {
+    let mut map: HashMap<String, i32> = HashMap::new();
+    
+    // Adding all the keys.  
+    map.insert(POW.to_string(), 4);    
+    map.insert(MULT.to_string(), 3);
+    map.insert(DIV.to_string(),  3);
+    map.insert(PLUS.to_string(), 2);
+    map.insert(MINUS.to_string(), 2);
+
+    // Return the map.
+    
+    map
+}

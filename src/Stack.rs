@@ -1,30 +1,69 @@
 // STACK.
 use std::collections::HashMap;
+use crate::enums::BOOL_TRUE;
+
+
 
 pub struct Stack {
+    
     pub bool_map:     HashMap<String, bool>,
-    pub str_map:     HashMap<String, String>,
-    pub int_map_8:   HashMap<String, i8>, // 8 bit..
-    pub int_map_16:  HashMap<String, i16>, // 16 bit..
-    pub int_map:     HashMap<String, i32>, // 32 bit.     
-    pub int_map_64:  HashMap<String, i64>, // 64 bit..
-    pub int_map_128: HashMap<String, i128>, // 128 bit..
+    pub str_map:      HashMap<String, String>,
+    pub int_map_8:    HashMap<String, i8>, // 8 bit..
+    pub int_map_16:   HashMap<String, i16>, // 16 bit..
+    pub int_map:      HashMap<String, i32>, // 32 bit.     
+    pub int_map_64:   HashMap<String, i64>, // 64 bit..
+    pub int_map_128:  HashMap<String, i128>, // 128 bit..
+     
 }
+
 
 #[allow(dead_code)]
 impl Stack {
     pub fn new() -> Self {
         Self {
-            bool_map:           HashMap::new(), 
+            bool_map:           HashMap::new(),
             str_map:            HashMap::new(), 
+            
             int_map_8:          HashMap::new(),
             int_map_16:         HashMap::new(),
             int_map:            HashMap::new(),
             int_map_64:         HashMap::new(),
             int_map_128:        HashMap::new(),
+            
         }
     }
-    
+     
+    pub fn print_variable(&mut self, key: &String) -> bool {
+
+            if let Some(v) = self.get_from_int_map(key) {
+                print!("{}", v);
+                return true;
+            }
+
+            if let Some(v) = self.get_from_str_map(key) {
+                print!("{}", v);
+                return true;
+            }
+            
+
+            if let Some(v) = self.get_from_int_map_64(key) { 
+                print!("{}", v);
+                return true;
+            }
+            
+            if let Some(v) = self.get_from_bool_map(key) {
+                if *v {
+                    print!("{}", BOOL_TRUE);
+                    return true;           
+                }
+                
+                print!("False");
+                return true;
+            }
+
+            return false;
+    }
+
     pub fn defined(&mut self, key: &String) -> bool {
         return self.int_map.contains_key(key) 
             || self.str_map.contains_key(key) 
