@@ -15,9 +15,6 @@ use std::io;
 
 
 
-
-
-
 #[allow(unused_variables)]
 fn main() -> Result<(), io::Error> {
     
@@ -32,6 +29,11 @@ fn main() -> Result<(), io::Error> {
         Ok(()) => println!("Success!"),
         Err(e) => println!("{}", e),
     }
+    
+    match parser.evaluate() {
+        Ok(v)  => println!("val = {}", v),
+        Err(e) => println!("{}", e)
+    }
 
     return Ok(());
 }
@@ -39,7 +41,7 @@ fn main() -> Result<(), io::Error> {
 
 
 #[allow(unused_variables)]
-fn main4() -> Result<(), io::Error> {
+fn main__1() -> Result<(), io::Error> {
     // return test_lexer();
     // Command line args
     

@@ -8,7 +8,7 @@ use std::collections::HashMap;
 
 pub struct ArithmaticParser<'a> {
     pub lex: &'a mut KasperLexer<'a>,
-    pub IOStack: Vec<Token>,
+    pub iostack: Vec<Token>,
     pub PrecTable: HashMap<String, i32>
 }
 fn is_parent(T: TokenT) -> bool {
@@ -20,14 +20,14 @@ impl<'a> ArithmaticParser<'a> {
     pub fn new(lexer: &'a mut KasperLexer<'a>) -> Self {
         ArithmaticParser {
             lex: lexer,
-            IOStack: Vec::new(),
+            iostack: Vec::new(),
             PrecTable: make_prec_table(),
         }
     }
 
     pub fn dump_stack(&mut self) {
-        for i in 0..self.IOStack.len() {
-            print!("{} ", self.IOStack[i].value);
+        for i in 0..self.iostack.len() {
+            print!("{} ", self.iostack[i].value);
             
         }
         println!();
@@ -39,14 +39,14 @@ impl<'a> ArithmaticParser<'a> {
         while self.lex.is_not_empty() {
             let mut token = match_lexer_token(self.lex.next());
             let mut prev = tmp.last_mut().cloned(); // An Option...
-            self.dump_stack();
+           
+            // self.dump_stack();
             if token.token_type == TokenT::COMMENT__ {
-                
                 continue;
             }
 
             if token.token_type == TokenT::NUMBER__ {
-                self.IOStack.push(token);
+                self.iostack.push(token);
                 continue;
             }
             
@@ -59,7 +59,7 @@ impl<'a> ArithmaticParser<'a> {
                 if let Some(mut v) = prev {
                     while v.token_type != TokenT::OPAR__ && tmp.len() > 0 {
 
-                        self.IOStack.push(v.clone());
+                        self.iostack.push(v.clone());
                         tmp.pop();
                         
                         if let Some(other) = tmp.last_mut().cloned() {
@@ -96,7 +96,7 @@ impl<'a> ArithmaticParser<'a> {
                         
                         while self.is_less_eq(&token.value, &v.value) && v.value != token.value {
                             
-                            self.IOStack.push(v.clone());
+                            self.iostack.push(v.clone());
                             tmp.pop();
                             if let Some(n) = tmp.last_mut().cloned() {
                                 v = n;
@@ -119,21 +119,21 @@ impl<'a> ArithmaticParser<'a> {
         
         while tmp.len() > 0 {
             if let Some(v) = tmp.pop() {
-                self.IOStack.push(v);
+                self.iostack.push(v);
                 continue;
             }
             
             break;
         }
         
-        for i in 0..self.IOStack.len() {
-            if is_parent(self.IOStack[i].token_type) {
+        for i in 0..self.iostack.len() {
+            if is_parent(self.iostack[i].token_type) {
                 let err = format!("{}:{}:{} Non-closed bracket Error.", self.lex.file_path, self.lex.row, self.lex.col);
                 return Err(make_error(&err));
             }
         }
         
-        self.IOStack.reverse();
+        self.iostack.reverse();
         Ok(())
     }
     
@@ -150,11 +150,63 @@ impl<'a> ArithmaticParser<'a> {
     }
 
     pub fn clear_stack(&mut self) {
-        self.IOStack = Vec::new();
+        self.iostack = Vec::new();
     }
     
-    pub fn evaluate(&mut self) -> Result<(), io::Error> {
-        Ok(())
+    pub fn evaluate(&mut self) -> Result<f64, io::Error> {
+        let mut res: Vec<f64> = Vec::new();
+        
+        while self.iostack.len() > 0 {
+            let l: Token = self.iostack.pop().unwrap();
+            
+            // oprnd
+            if self.is_in_prec(&l.value) {
+
+                let a: f64 = res.pop().unwrap();
+                let b: f64 = res.pop().unwrap();
+            
+                if l.token_type == TokenT::PLUS__ {
+                    res.push(a + b);  
+                    continue;    
+                } 
+                
+                if l.token_type == TokenT::MINUS__ {
+                    res.push(b - a);  
+                    continue;    
+                } 
+                
+                if l.token_type == TokenT::MULT__ {
+                    res.push(a * b);  
+                    continue;    
+                } 
+                
+                if l.token_type == TokenT::DIV__ {
+                    if a == 0.0 {
+                        return Err(make_error("Division by zero Error."));
+                    }
+                    
+                    res.push(b / a);  
+                    continue;    
+                } 
+
+                if l.token_type == TokenT::POW__ {
+                    res.push(b.powf(a));
+                    continue;
+                } 
+                
+                let err = format!("Unsupported operand {}", l.value);
+                return Err(make_error(&err));
+            }
+            // Number.
+            res.push(l.value.parse::<f64>().unwrap());
+        }
+
+        if let Some(value) = res.last() {
+            return Ok(*value);
+        }
+
+        let err = format!("Value was lost in the stack.");
+        return Err(make_error(&err));
     }
 
 }

@@ -32,7 +32,16 @@ pub struct Token {
 }
 
 impl Token {
-
+    
+    pub fn new(value: String, type_: TokenT) -> Self {
+        Token {
+            value: value,
+            token_type: type_,
+            size: 0,
+            loc: Location::empty(),
+        }
+    }
+ 
     pub fn empty() -> Self {
         Token {
             value: String::from(""),
