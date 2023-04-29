@@ -6,8 +6,7 @@ use crate::util::make_error;
 use crate::enums::{ TokenT, make_prec_table };
 use std::collections::HashMap;
 
-pub struct ArithmaticParser<'a> {
-    pub lex: &'a mut KasperLexer<'a>,
+pub struct ArithmaticParser {
     pub iostack: Vec<Token>,
     pub PrecTable: HashMap<String, i32>
 }
@@ -15,11 +14,10 @@ fn is_parent(T: TokenT) -> bool {
     return T == TokenT::OPAR__ || T == TokenT::CPAR__;
 }
 
-impl<'a> ArithmaticParser<'a> {
+impl ArithmaticParser {
     
-    pub fn new(lexer: &'a mut KasperLexer<'a>) -> Self {
-        ArithmaticParser {
-            lex: lexer,
+    pub fn new() -> Self {
+        ArithmaticParser { 
             iostack: Vec::new(),
             PrecTable: make_prec_table(),
         }
@@ -33,13 +31,17 @@ impl<'a> ArithmaticParser<'a> {
         println!();
     }
 
-    pub fn postfix(&mut self) -> Result<(), io::Error> {
+    pub fn postfix(&mut self, lex: &mut KasperLexer) -> Result<(), io::Error> {
         let mut tmp: Vec<Token> = Vec::new();
-        
-        while self.lex.is_not_empty() {
-            let mut token = match_lexer_token(self.lex.next());
+
+        while lex.is_not_empty() {
+             
+            let mut token = match_lexer_token(lex.next());
+            if token.token_type == TokenT::NL__ {
+                break;
+            }
+            
             let mut prev = tmp.last_mut().cloned(); // An Option...
-           
             // self.dump_stack();
             if token.token_type == TokenT::COMMENT__ {
                 continue;
@@ -79,7 +81,7 @@ impl<'a> ArithmaticParser<'a> {
                     }
                 }
 
-                let err = format!("{}:{}:{} Non-closed bracket Error.", self.lex.file_path, token.loc.row, token.loc.col);
+                let err = format!("{}:{}:{} Non-closed bracket Error.", lex.file_path, token.loc.row, token.loc.col);
                 return Err(make_error(&err));
             }
             
@@ -115,6 +117,7 @@ impl<'a> ArithmaticParser<'a> {
                 
                 tmp.push(token);
             }
+
         }
         
         while tmp.len() > 0 {
@@ -128,7 +131,7 @@ impl<'a> ArithmaticParser<'a> {
         
         for i in 0..self.iostack.len() {
             if is_parent(self.iostack[i].token_type) {
-                let err = format!("{}:{}:{} Non-closed bracket Error.", self.lex.file_path, self.lex.row, self.lex.col);
+                let err = format!("{}:{}:{} Non-closed bracket Error.", lex.file_path, lex.row, lex.col);
                 return Err(make_error(&err));
             }
         }

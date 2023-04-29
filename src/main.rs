@@ -16,16 +16,16 @@ use std::io;
 
 
 #[allow(unused_variables)]
-fn main() -> Result<(), io::Error> {
+fn ap_test() -> Result<(), io::Error> {
     
     let src: &str = "source.ks";
 
     let mut lex: KasperLexer = KasperLexer::new(&src);
-    let mut parser: AP = AP::new(&mut lex);
+    let mut parser: AP = AP::new();
     
-    parser.lex.read()?;   
+    lex.read()?;   
     
-    match parser.postfix() {
+    match parser.postfix(&mut lex) {
         Ok(()) => println!("Success!"),
         Err(e) => println!("{}", e),
     }
@@ -41,7 +41,7 @@ fn main() -> Result<(), io::Error> {
 
 
 #[allow(unused_variables)]
-fn main__1() -> Result<(), io::Error> {
+fn main() -> Result<(), io::Error> {
     // return test_lexer();
     // Command line args
     
@@ -58,7 +58,7 @@ fn main__1() -> Result<(), io::Error> {
     
     let src = &args[1];
     // Plugin the parser with the lexer. 
-    let lex: KasperLexer = KasperLexer::new(&src);
+    let mut lex: KasperLexer = KasperLexer::new(&src);
     let mut parser: KParser = KParser::new(lex);
     parser.lexer.read()?;
     

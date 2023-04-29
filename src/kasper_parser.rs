@@ -5,6 +5,7 @@ use crate::stack::*;
 use crate::lexer::{ KasperLexer, match_lexer_token };
 use crate::util::{ not_implemented, make_error };
 use crate::token::Token;
+use crate::expr_parser::ArithmaticParser;
 
 #[allow(dead_code)]
 pub struct Variable {
@@ -66,15 +67,18 @@ int_map_128_array: HashMap<String, Vec<i128>>, // 128 bit..
 
 pub struct KasperParser<'a> {
     pub lexer: KasperLexer<'a>,
+    pub ap: ArithmaticParser,
     stack: Stack,
 }
+
 #[allow(unreachable_patterns, dead_code)]  
 impl<'a> KasperParser<'a> {
     
-     pub fn new(lex: KasperLexer<'a>) -> Self {
+     pub fn new(mut lex: KasperLexer<'a>) -> Self {
         Self {
             lexer: lex,
             stack: Stack::new(),
+            ap: ArithmaticParser::new(),
         }
     }
     
@@ -138,10 +142,8 @@ impl<'a> KasperParser<'a> {
             if self.stack.defined(&token.value) {
                 // | x |
 
-                if self.lexer.get_next() == PIPE {
-                    println!("Found Pipe!");
+                if self.lexer.get_next() == PIPE { 
                     self.lexer.chop(); // Chop the pipe.
-                    
                     if let Some(v) = self.stack.get_from_bool_map(&token.value) {
                         return Ok(*v);
                     }
@@ -174,7 +176,7 @@ impl<'a> KasperParser<'a> {
             let lhs: i128 = token.value.parse::<i128>().unwrap(); // LHS
             let tmp = match_lexer_token(self.lexer.next());
             
-        }        
+        }
         
         if token.token_type == TokenT::STRING__  {
             not_implemented("Condition are not Implemented yet!");
@@ -201,8 +203,8 @@ impl<'a> KasperParser<'a> {
     pub fn assign_variable(&mut self, token: &mut Token) -> Result<(), io::Error> {
         
         let variable_name: &String = &token.value.clone();
-        if self.stack.defined(&token.value) {
-            
+        
+        if self.stack.defined(&token.value) {    
             if match_lexer_token(self.lexer.next()).token_type == TokenT::EQUAL__ {
                 // Assign variable. = val.
                 self.lexer.chop();

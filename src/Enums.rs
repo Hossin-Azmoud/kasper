@@ -70,6 +70,7 @@ pub const ELSE:        &str  = "else";
 #[derive(Copy, Clone, PartialEq, Hash, Eq)]
 #[allow(non_camel_case_types, dead_code)]
 pub enum TokenT {
+    NL__,
     // Special tokens.
     DIV__,
     COMMENT__,
@@ -128,6 +129,7 @@ pub enum TokenT {
 impl fmt::Display for TokenT {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let printable = match *self {
+            TokenT::NL__               => "NL__",
             TokenT::NONE__             => "NONE__",
             TokenT::DQUOTE__           => "DQUOTE__",
             TokenT::SQUOTE__           => "SQUOTE__",
@@ -191,7 +193,7 @@ pub fn make_token_table() -> HashMap<char, TokenT> {
     map.insert(MULT,      TokenT::MULT__);
     map.insert(DIV,       TokenT::DIV__);
     map.insert(POW,       TokenT::POW__);
-    
+    map.insert(NL,        TokenT::NL__);
 
 
     map.insert(COMA,      TokenT::COMA__);

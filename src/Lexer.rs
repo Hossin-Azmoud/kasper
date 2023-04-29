@@ -227,8 +227,7 @@ impl<'a> KasperLexer<'a> {
         }
 
         if c.is_ascii_punctuation() {
-            
-           
+                       
             token.write(c);
             token.token_type = TokenT::NONE__;
             self.chop();
@@ -245,8 +244,12 @@ impl<'a> KasperLexer<'a> {
             let mut c = char::from(self.source[self.cur]);
 
             while c.is_ascii_whitespace() && self.is_not_empty() {
+                if c == NL {
+                    break;
+                }
+                
                 self.chop();
-
+                
                 if self.cur < self.size {
                     c = char::from(self.source[self.cur]);
                     continue;
