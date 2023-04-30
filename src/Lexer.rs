@@ -280,23 +280,36 @@ impl<'a> KasperLexer<'a> {
         }
     }
     
-    pub fn collect_number(&mut self, token: &mut Token) { 
+    pub fn collect_number(&mut self, token: &mut Token) -> Result<(), io::Error> { 
+        
         token.token_type = TokenT::NUMBER__;
         let mut c: char = self.get_current();
+        
         while self.is_not_empty() && c.is_digit(10) {
             
-            if c.is_ascii_punctuation() {
+            if c.is_ascii_punctuation() && c != DOT {
                 break;
             }
 
             if c.is_ascii_whitespace() {
                 break;
             }
+
+            if c == DOT {
+                if token.token_type == TokenT::FLOAT__ {
+                    let err = format!("{}:{}:{} synatx error, floats have one dot.", self.file_path, token.loc.row, token.loc.col);
+                    return Err(make_error(&err));
+                }
+                
+                token.token_type = TokenT::FLOAT__;
+            }
             
             token.write(c);
             self.chop();
             c = self.get_current();
         }
+
+        return Ok(());
     }
 
     pub fn next(&mut self) -> Result<Token, io::Error> {
@@ -450,7 +463,10 @@ impl<'a> KasperLexer<'a> {
                 }
                 
                 if c.is_digit(10) {
-                    self.collect_number(&mut token);
+                    match self.collect_number(&mut token) {
+                        Ok(())   => return Ok(token),
+                        Err(e) => return Err(e),
+                    }
                 }
 
                 return Ok(token);

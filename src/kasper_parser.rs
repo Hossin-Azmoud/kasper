@@ -1,4 +1,5 @@
 // TODO: Parse complex arithmatics.
+// TODO: 
 use std::io;
 use crate::enums::*;
 use crate::stack::*;
@@ -27,22 +28,20 @@ impl Variable {
     }
     
     pub fn empty() -> Self {
+        
         Self {
             name: "".to_string(),
             value: "".to_string(),
             var_parsed_type: TokenT::NONE__,
             declared_type: TokenT::NONE__,
         }
+
     }
     
-    pub fn parse_as_i32(&mut self) -> i32 {
-        not_implemented("Variable::parse_as_i32()");
-        0
-    }
+
 
     pub fn is_number(&mut self) -> bool {
-        not_implemented("Variable::is_number()");
-        false
+        return self.declared_type == TokenT::FLOAT__  || self.declared_type == TokenT::INT_T  || self.declared_type == TokenT::INT_T_64;
     }
 }
 
@@ -66,9 +65,9 @@ int_map_128_array: HashMap<String, Vec<i128>>, // 128 bit..
 */
 
 pub struct KasperParser<'a> {
-    pub lexer: KasperLexer<'a>,
-    pub ap: ArithmaticParser,
-    stack: Stack,
+    pub lexer: KasperLexer<'a>, // Reads the code.. 
+    pub ap: ArithmaticParser,   // Read math expressions...
+    stack: Stack,               // Stores variables...
 }
 
 #[allow(unreachable_patterns, dead_code)]  
@@ -84,16 +83,39 @@ impl<'a> KasperParser<'a> {
     
         
     pub fn parse_lexer(&mut self) -> Result<(), io::Error> {
-        
         let mut token = match_lexer_token(self.lexer.next());        
+
+        if token.token_type == TokenT::NONE__ {
+            
+            let err = format!("{}:{}:{} Syntax error, unrecognized token { }",
+                               self.lexer.file_path, 
+                               token.loc.col, 
+                               token.loc.row, 
+                               token.value  
+                            );
+
+            return Err(make_error(&err));
+        }
         
-        if token.token_type != TokenT::COMMENT__ && token.token_type != TokenT::NONE__ { 
+        if token.token_type == TokenT::NL__ {
+           return Ok(());
+        }
+
+        if token.token_type != TokenT::COMMENT__ { 
+            
             if token.token_type == TokenT::FUNC_CALL__ {
+                
                 if token.value == String::from(WRITE) {
                     return self.parse_print();
                 }
 
-                let err = format!("{}:{}:{} {} is not defined", self.lexer.file_path, token.loc.col, token.loc.row, token.value);
+                let err = format!("{}:{}:{} {} is not defined", 
+                                  self.lexer.file_path, 
+                                  token.loc.col, 
+                                  token.loc.row, 
+                                  token.value
+                            );
+
                 return Err(make_error(&err));
             }
 
@@ -104,29 +126,8 @@ impl<'a> KasperParser<'a> {
             if token.token_type == TokenT::VARNAME__ { // var
                 return self.assign_variable(&mut token); 
             }
-/*
-            if token.token_type == TokenT::IF__ {
-                match self.parse_branching() {
-                    Ok(v) => {
-                        // if v is true, then we parse this branch and skip the ELSE.
-                        if v {
-                            token = match_lexer_token(self.lexer.next()); 
-                            
-                            if token.token_type != TokenT::OCURLY__ {
-                                not_implemented("branching mechanism is not impl!");
-                            }
-
-                        } else { 
-                            not_implemented("branching mechanism is not impl!");
-                        }
-                        // if v is false, then we parse the next branch and skip this one.
-                    },
-                    Err(e) => return Err(e),
-                }
-            }
-*/
-           return Ok(());
-
+          
+            return Ok(());
         }
 
         return Ok(());
@@ -161,11 +162,11 @@ impl<'a> KasperParser<'a> {
             }
 
             let err = format!("{}:{}:{} {} is Undefined", 
-                          self.lexer.file_path, 
-                          token.loc.row, 
-                          token.loc.col, 
-                          token.value
-                    );
+                      self.lexer.file_path, 
+                      token.loc.row, 
+                      token.loc.col, 
+                      token.value
+                );
 
             return Err(make_error(&err));
         }
@@ -256,20 +257,8 @@ impl<'a> KasperParser<'a> {
         return Err(make_error(&err));         
     }
 
-    pub fn parse_arithmatic(&mut self, dst_key: &String) -> Result<(), io::Error> {
-        // TODO: Implement parsing the arithmatic.
-        if self.stack.defined(dst_key) {
-        
-            todo!("arithmatics are not not_implemented");
-        }
-        
-        let err = format!("{}:{} Undefined variable {}", self.lexer.row, self.lexer.col, dst_key.to_string());
-        return Err(make_error(&err));
-    }
-
     pub fn parse_lhs(&mut self) -> Result<Variable, io::Error> {
         // Parse var -> T
-        // Parses the type of the variable and makes room for it.
         let mut var   = Variable::empty();
         let mut token = match_lexer_token(self.lexer.next());  // Get VarName.
         
@@ -321,46 +310,85 @@ impl<'a> KasperParser<'a> {
      
     }
     
-    
-    pub fn register_var(&mut self, variable: Variable) -> Result<(), io::Error> {
-        
-        let token = match_lexer_token(self.lexer.next());
-        
-        if variable.declared_type == TokenT::INT_T && token.token_type == TokenT::NUMBER__ {
-            let v = token.value.parse::<i32>().unwrap();            
-            self.stack.push_int_map(&variable.name, v);
-            return Ok(());
-        }
 
+    pub fn register_var(&mut self, mut variable: Variable) -> Result<(), io::Error> {
 
-        if variable.declared_type == TokenT::STRING_T && token.token_type == TokenT::STRING__ {
-            self.stack.push_str_map(&variable.name, token.value);
-            return Ok(());
-        }
-        
-        if variable.declared_type == TokenT::INT_T_64 && token.token_type == TokenT::NUMBER__ {
-            let v = token.value.parse::<i64>().unwrap();            
-            self.stack.push_int_map_64(&variable.name, v);
-            return Ok(());
-        }
-        
-        if variable.declared_type == TokenT::BOOL_T && (token.token_type == TokenT::BOOL_TRUE__ || token.token_type == TokenT::BOOL_FALSE__) {
+        if variable.declared_type == TokenT::STRING_T  {
+            let token = match_lexer_token(self.lexer.next());
             
-            let v = token.token_type == TokenT::BOOL_TRUE__;
-            self.stack.push_bool_map(&variable.name, v);
-            return Ok(());
-        }
+            if token.token_type == TokenT::STRING__ {
+                self.stack.push_str_map(&variable.name, token.value);
+                return Ok(());
+            }
+
+            let err = format!("{}:{}:{} unexpected token, expected string but found {}",
+                        self.lexer.file_path,
+                        token.loc.row,
+                        token.loc.col,
+                        token.token_type
+                    );
+
+            return Err(make_error(&err));
+        } 
         
-        let err = format!("{}:{} expected value of type {} but found type {}", token.loc.row, token.loc.col, variable.declared_type, token.token_type);
+        if variable.declared_type == TokenT::BOOL_T {
+            let token = match_lexer_token(self.lexer.next());
+
+            if token.token_type == TokenT::BOOL_TRUE__ || token.token_type == TokenT::BOOL_FALSE__ {
+                let v = token.token_type == TokenT::BOOL_TRUE__;
+                self.stack.push_bool_map(&variable.name, v);
+                return Ok(());
+            }
+
+            let err = format!("{}:{}:{} unexpected token, expected boolean but found {}",
+                        self.lexer.file_path,
+                        token.loc.row,
+                        token.loc.col,
+                        token.token_type
+                );
+
+            return Err(make_error(&err));
+        }
+
+
+        if variable.is_number() {
+            match self.ap.read_expression(&mut self.lexer, &mut self.stack)
+            {
+                Ok(v) => {
+
+                    if variable.declared_type == TokenT::INT_T { // Reg as i32
+                        self.stack.push_int_map(&variable.name, v as i32);
+                        return Ok(());
+                    }
+                    
+                    if variable.declared_type == TokenT::INT_T_64 { // Reg as i64
+                        self.stack.push_int_map_64(&variable.name, v as i64);
+                        return Ok(());
+                    }
+                    
+                    let err = format!("unsupported type {}", variable.declared_type);
+                    return Err(make_error(&err));
+                },
+
+                Err(e) => return Err(e),
+            };
+        };
+        
+                
+        let err = format!("{}:{}:{} Syntax err", 
+                    self.lexer.file_path,
+                    self.lexer.row,
+                    self.lexer.col
+                    );
         return Err(make_error(&err));
     }
 
-    pub fn parse_def(&mut self) -> Result<(), io::Error>{
+    pub fn parse_def(&mut self) -> Result<(), io::Error> {
+        
         match self.parse_lhs() {
-            Ok(variable) => {
+            Ok(mut variable) => {
                 // successs parsing the type..
                 if match_lexer_token(self.lexer.next()).token_type == TokenT::EQUAL__ {
-                    // Assign variable. = val.
                     self.lexer.chop();
                     return self.register_var(variable);
                 }
@@ -371,6 +399,7 @@ impl<'a> KasperParser<'a> {
             Err(e) => return Err(e),
             _ => panic!("unreachable!"),
         } 
+
     }
        
 

@@ -35,6 +35,7 @@ pub const MINUS:          char  = '-';
 pub const DIV:            char  = '/';
 pub const POW:            char  = '^';
 
+pub const DOT:            char  = '.';
 pub const COMA:           char  = ',';
 pub const SEMICOLON:      char  = ';';
 pub const EQUAL:          char  = '=';
@@ -93,11 +94,14 @@ pub enum TokenT {
     THIN_ARROW__,
     FAT_ARROW__,
     PIPE__,
+    
     // Other
     NONE__,
     NUMBER__,
+        
     STRING__,
     VARNAME__,
+    
     // Comparison operators
     COMP_EQ__,
     COMP_NOT_EQ__,
@@ -110,6 +114,7 @@ pub enum TokenT {
     BOOL_FALSE__,
 
     // Types
+    FLOAT__,
     INT_T,
     INT_T_64,
     STRING_T,
@@ -159,6 +164,7 @@ impl fmt::Display for TokenT {
             TokenT::STRING_T           => "STRING_T",
             TokenT::INT_T              => "INT_T",
             TokenT::INT_T_64           => "INT_64",
+            TokenT::FLOAT__            => "FLOAT__",
             TokenT::MULT__             => "MULT__",
             TokenT::BOOL_T             => "BOOL_T",
             TokenT::BOOL_TRUE__        => "BOOL_TRUE__",

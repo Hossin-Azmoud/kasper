@@ -5,11 +5,13 @@ use crate::token::Token;
 use crate::util::make_error;
 use crate::enums::{ TokenT, make_prec_table };
 use std::collections::HashMap;
+use crate::stack::*;
 
 pub struct ArithmaticParser {
     pub iostack: Vec<Token>,
     pub PrecTable: HashMap<String, i32>
 }
+
 fn is_parent(T: TokenT) -> bool {
     return T == TokenT::OPAR__ || T == TokenT::CPAR__;
 }
@@ -30,10 +32,32 @@ impl ArithmaticParser {
         }
         println!();
     }
+    
+    pub fn dump_res_stack(&mut self, res: &Vec<f64>) {
+        for i in 0..res.len() {
+            print!("{} ", res[i]);
+            
+        }
+        println!();
+    }
+    
+    pub fn read_expression(&mut self, lex: &mut KasperLexer, mem_stack: &mut Stack) -> Result<f64, io::Error> {
+        match self.postfix(lex) {
+            Ok(()) => {
+                match self.evaluate(mem_stack) {
+                    Ok(v)  => Ok(v),
+                    Err(e) => return Err(e),
+
+                }
+            },
+            Err(e) => return Err(e),
+        }
+    }
 
     pub fn postfix(&mut self, lex: &mut KasperLexer) -> Result<(), io::Error> {
         let mut tmp: Vec<Token> = Vec::new();
 
+        
         while lex.is_not_empty() {
              
             let mut token = match_lexer_token(lex.next());
@@ -47,7 +71,7 @@ impl ArithmaticParser {
                 continue;
             }
 
-            if token.token_type == TokenT::NUMBER__ {
+            if token.token_type == TokenT::NUMBER__ || token.token_type == TokenT::VARNAME__ {
                 self.iostack.push(token);
                 continue;
             }
@@ -156,15 +180,16 @@ impl ArithmaticParser {
         self.iostack = Vec::new();
     }
     
-    pub fn evaluate(&mut self) -> Result<f64, io::Error> {
+    pub fn evaluate(&mut self, mem_stack: &mut Stack) -> Result<f64, io::Error> {
         let mut res: Vec<f64> = Vec::new();
-        
+ 
+
         while self.iostack.len() > 0 {
-            let l: Token = self.iostack.pop().unwrap();
             
+            let l: Token = self.iostack.pop().unwrap();
             // oprnd
             if self.is_in_prec(&l.value) {
-
+                
                 let a: f64 = res.pop().unwrap();
                 let b: f64 = res.pop().unwrap();
             
@@ -200,14 +225,35 @@ impl ArithmaticParser {
                 let err = format!("Unsupported operand {}", l.value);
                 return Err(make_error(&err));
             }
-            // Number.
-            res.push(l.value.parse::<f64>().unwrap());
+            
+
+            if l.token_type == TokenT::NUMBER__ || l.token_type == TokenT::FLOAT__ {
+                res.push(l.value.parse::<f64>().unwrap());
+                continue;
+            }
+            
+            let undef = format!("{}:{} {} is undefined !",
+                            l.loc.row,
+                            l.loc.col,
+                            l.value
+                        );
+
+            if l.token_type == TokenT::VARNAME__ {
+                // find the value then push it..
+                match mem_stack.get_int(&l.value) {
+                    Some(val) => {
+                        res.push(val);
+                        continue;
+                    },
+                    None      => return Err(make_error(&undef))
+                }
+            }
         }
 
         if let Some(value) = res.last() {
             return Ok(*value);
         }
-
+        
         let err = format!("Value was lost in the stack.");
         return Err(make_error(&err));
     }

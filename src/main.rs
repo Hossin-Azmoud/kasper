@@ -7,37 +7,10 @@ mod util;
 mod condition;
 mod expr_parser;
 
-use crate::expr_parser::ArithmaticParser as AP;
 use crate::lexer::*;
 use crate::kasper_parser::KasperParser as KParser;
 use std::env;
 use std::io;
-
-
-
-#[allow(unused_variables)]
-fn ap_test() -> Result<(), io::Error> {
-    
-    let src: &str = "source.ks";
-
-    let mut lex: KasperLexer = KasperLexer::new(&src);
-    let mut parser: AP = AP::new();
-    
-    lex.read()?;   
-    
-    match parser.postfix(&mut lex) {
-        Ok(()) => println!("Success!"),
-        Err(e) => println!("{}", e),
-    }
-    
-    match parser.evaluate() {
-        Ok(v)  => println!("val = {}", v),
-        Err(e) => println!("{}", e)
-    }
-
-    return Ok(());
-}
-
 
 
 #[allow(unused_variables)]

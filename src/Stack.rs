@@ -64,6 +64,20 @@ impl Stack {
             return false;
     }
 
+    pub fn get_int(&mut self, key: &String) -> Option<f64>{
+        
+        if let Some(v) = self.get_from_int_map(key) {
+            return Some(*v as f64);
+        }
+
+
+        if let Some(v) = self.get_from_int_map_64(key) { 
+            return Some(*v as f64);
+        }
+
+        return None;
+    }
+    
     pub fn defined(&mut self, key: &String) -> bool {
         return self.int_map.contains_key(key) 
             || self.str_map.contains_key(key) 
