@@ -1,25 +1,29 @@
 // ENUMS AND CONSTANTS.
 
+
+#[allow(unused)]
+#[allow(dead_code)]
 use std::fmt;
 use std::collections::HashMap;
-/*
-#[allow(dead_code, unused_variables)]
-pub const UMAX_8_BIT:   u8    = 0xFF;
-pub const UMAX_16_BIT:  u16   = 0xFFFF;
-pub const UMAX_32_BIT:  u32   = 0xFFFFFFFF;
-pub const UMAX_64_BIT:  u64   = 0xFFFFFFFFFFFFFFFF;
-pub const UMAX_128_BIT: u128  = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
 
-pub const MAX_8_BIT:   i8    = 0x7F; // 127
-pub const MAX_16_BIT:  i16   = 0x7FFF;
-pub const MAX_32_BIT:  i32   = 0x7FFFFFFF;
-pub const MAX_64_BIT:  i64   = 0x7FFFFFFFFFFFFFFF;
-pub const MAX_128_BIT: i128  = 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // >> Division by two.
+/*
+    
+    pub const UMAX_8_BIT:   u8    = 0xFF;
+    pub const UMAX_16_BIT:  u16   = 0xFFFF;
+    pub const UMAX_32_BIT:  u32   = 0xFFFFFFFF;
+    pub const UMAX_64_BIT:  u64   = 0xFFFFFFFFFFFFFFFF;
+    pub const UMAX_128_BIT: u128  = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
+    pub const MAX_8_BIT:   i8    = 0x7F; // 127
+    pub const MAX_16_BIT:  i16   = 0x7FFF;
+    pub const MAX_32_BIT:  i32   = 0x7FFFFFFF;
+    pub const MAX_64_BIT:  i64   = 0x7FFFFFFFFFFFFFFF;
+    pub const MAX_128_BIT: i128  = 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // >> Division by two.
+
 */
-#[allow(dead_code, unused_variables)]
+#[allow(dead_code)]
 pub const DQUOTE:         char  = '\"';
 pub const SQUOTE:         char  = '\'';
-pub const SPACE:          char  = ' ';
+// pub const SPACE:          char  = ' ';
 pub const NL:             char  = '\n';
 pub const TAB:            char  = '\t';
 pub const RE:             char  = '\r';
@@ -44,8 +48,9 @@ pub const LT:             char  = '<';
 pub const QM:             char  = '!';
 pub const PIPE:           char  = '|';
 pub const ESCAPE:         char  = '\\';
-pub const THIN_ARROW:     &str  = "->"; 
-pub const FAT_ARROW:      &str  = "=>"; 
+
+pub const _THIN_ARROW:     &str  = "->"; 
+pub const _FAT_ARROW:      &str  = "=>"; 
 
 // Comparison operators.
 pub const COMP_EQ:        &str  = "==";
@@ -62,7 +67,7 @@ pub const BOOL:       &str  = "bool";
 // Key words
 pub const WRITE:      &str  = "write";
 pub const DEFINE:     &str  = "define";
-pub const PROCC:      &str  = "process";
+pub const _PROCC:      &str  = "process";
 pub const BOOL_TRUE:  &str  = "True";
 pub const BOOL_FALSE: &str  = "False";
 pub const IF:          &str  = "if";
@@ -216,16 +221,14 @@ pub fn make_token_table() -> HashMap<char, TokenT> {
 
 
 pub fn make_prec_table() -> HashMap<String, i32> {
-    let mut map: HashMap<String, i32> = HashMap::new();
     
+    let mut map: HashMap<String, i32> = HashMap::new();
     // Adding all the keys.  
     map.insert(POW.to_string(), 4);    
     map.insert(MULT.to_string(), 3);
     map.insert(DIV.to_string(),  3);
     map.insert(PLUS.to_string(), 2);
     map.insert(MINUS.to_string(), 2);
-
-    // Return the map.
-    
+    // Return the map.  
     map
 }

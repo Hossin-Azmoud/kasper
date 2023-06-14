@@ -1,6 +1,5 @@
 # kasper
-Dynamically typed programming language in Rust.
-
+programming language in Rust.
 
 ## Hello, world.
 - Build the program with cargo.
@@ -9,7 +8,7 @@ Dynamically typed programming language in Rust.
 ```
 - Make source.
 ```python
-print("Hello, Kasper.")
+write("Hello, Kasper.")
 ```
 - execute the source.
 ```console
@@ -20,18 +19,14 @@ print("Hello, Kasper.")
 ## How to
 
 - Variable declaration:
+
 ```python
 define name -> T
 ```
-_ Variable assignement:
+- Variable assignement:
+
 ```python
 name = value
 ```
 
 ## Examples
-
-
-
-
-
-

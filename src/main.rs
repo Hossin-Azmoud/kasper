@@ -31,7 +31,7 @@ fn main() -> Result<(), io::Error> {
     
     let src = &args[1];
     // Plugin the parser with the lexer. 
-    let mut lex: KasperLexer = KasperLexer::new(&src);
+    let lex: KasperLexer = KasperLexer::new(&src);
     let mut parser: KParser = KParser::new(lex);
     parser.lexer.read()?;
     

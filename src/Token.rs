@@ -36,7 +36,7 @@ pub struct Token {
 
 impl Token {
     
-    pub fn new(value: String, type_: TokenT) -> Self {
+    pub fn _new(value: String, type_: TokenT) -> Self {
         Token {
             value: value,
             token_type: type_,

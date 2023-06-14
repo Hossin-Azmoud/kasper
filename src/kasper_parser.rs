@@ -4,7 +4,7 @@ use std::io;
 use crate::enums::*;
 use crate::stack::*;
 use crate::lexer::{ KasperLexer, match_lexer_token };
-use crate::util::{ not_implemented, make_error };
+use crate::util::{ make_error }; // not_implemented
 use crate::token::Token;
 use crate::expr_parser::ArithmaticParser;
 
@@ -73,7 +73,7 @@ pub struct KasperParser<'a> {
 #[allow(unreachable_patterns, dead_code)]  
 impl<'a> KasperParser<'a> {
     
-     pub fn new(mut lex: KasperLexer<'a>) -> Self {
+     pub fn new(lex: KasperLexer<'a>) -> Self {
         Self {
             lexer: lex,
             stack: Stack::new(),
@@ -134,72 +134,72 @@ impl<'a> KasperParser<'a> {
     
     }
     
-    pub fn parse_condition(&mut self) -> Result<bool, io::Error> {
-        let mut parsed_condition: bool = true;
-        let token: Token           = match_lexer_token(self.lexer.next());
+    // pub fn parse_condition(&mut self) -> Result<bool, io::Error> {
+    //     let mut parsed_condition: bool = true;
+    //     let token: Token           = match_lexer_token(self.lexer.next());
         
-        if token.token_type == TokenT::VARNAME__ {
-            // Parse the codition that is inside.
-            if self.stack.defined(&token.value) {
-                // | x |
+    //     if token.token_type == TokenT::VARNAME__ {
+    //         // Parse the codition that is inside.
+    //         if self.stack.defined(&token.value) {
+    //             // | x |
 
-                if self.lexer.get_next() == PIPE { 
-                    self.lexer.chop(); // Chop the pipe.
-                    if let Some(v) = self.stack.get_from_bool_map(&token.value) {
-                        return Ok(*v);
-                    }
+    //             if self.lexer.get_next() == PIPE { 
+    //                 self.lexer.chop(); // Chop the pipe.
+    //                 if let Some(v) = self.stack.get_from_bool_map(&token.value) {
+    //                     return Ok(*v);
+    //                 }
 
-                }
+    //             }
                 
-                let err = format!("{}:{}:{} expected a PIPE (|) but found {}", 
-                          self.lexer.file_path, 
-                          token.loc.row, 
-                          token.loc.col,
-                          token.value
-                    );
+    //             let err = format!("{}:{}:{} expected a PIPE (|) but found {}", 
+    //                       self.lexer.file_path, 
+    //                       token.loc.row, 
+    //                       token.loc.col,
+    //                       token.value
+    //                 );
 
-                return Err(make_error(&err));
-            }
+    //             return Err(make_error(&err));
+    //         }
 
-            let err = format!("{}:{}:{} {} is Undefined", 
-                      self.lexer.file_path, 
-                      token.loc.row, 
-                      token.loc.col, 
-                      token.value
-                );
+    //         let err = format!("{}:{}:{} {} is Undefined", 
+    //                   self.lexer.file_path, 
+    //                   token.loc.row, 
+    //                   token.loc.col, 
+    //                   token.value
+    //             );
 
-            return Err(make_error(&err));
-        }
+    //         return Err(make_error(&err));
+    //     }
         
-        if token.token_type == TokenT::NUMBER__  {
+    //     if token.token_type == TokenT::NUMBER__  {
             
-            not_implemented("Condition are not Implemented yet!");
-            let lhs: i128 = token.value.parse::<i128>().unwrap(); // LHS
-            let tmp = match_lexer_token(self.lexer.next());
+    //         not_implemented("Condition are not Implemented yet!");
+    //         let lhs: i128 = token.value.parse::<i128>().unwrap(); // LHS
+    //         let tmp = match_lexer_token(self.lexer.next());
             
-        }
+    //     }
         
-        if token.token_type == TokenT::STRING__  {
-            not_implemented("Condition are not Implemented yet!");
-        }
+    //     if token.token_type == TokenT::STRING__  {
+    //         not_implemented("Condition are not Implemented yet!");
+    //     }
         
-        return Ok(true);
-    }
+    //     return Ok(true);
+    // }
 
-    pub fn parse_branching(&mut self) -> Result<bool, io::Error>{
-        // if | x == 0 | { ... } else { ... }
-        let token = match_lexer_token(self.lexer.next());    
+    // pub fn parse_branching(&mut self) -> Result<bool, io::Error>{
+    //     // if | x == 0 | { ... } else { ... }
+    //     let token = match_lexer_token(self.lexer.next());    
         
-        if token.token_type == TokenT::PIPE__ {
-            match self.parse_condition() {
-                Ok(v) => return Ok(v),
-                Err(e) => return Err(e),
-            }
-        }
+    //     if token.token_type == TokenT::PIPE__ {
+    //         match self.parse_condition() {
+    //             Ok(v) => return Ok(v),
+    //             Err(e) => return Err(e),
+    //         }
+    //     }
         
-        let err = format!("{}:{}:{} expected a pipe | but got {} instead", self.lexer.file_path, token.loc.row, token.loc.col, token.value);
-        return Err(make_error(&err));
-    }
+    //     let err = format!("{}:{}:{} expected a pipe | but got {} instead", self.lexer.file_path, token.loc.row, token.loc.col, token.value);
+    //     return Err(make_error(&err));
+    // }
     
     pub fn assign_variable(&mut self, token: &mut Token) -> Result<(), io::Error> {
         
@@ -379,14 +379,15 @@ impl<'a> KasperParser<'a> {
                     self.lexer.file_path,
                     self.lexer.row,
                     self.lexer.col
-                    );
+                );
+
         return Err(make_error(&err));
     }
 
     pub fn parse_def(&mut self) -> Result<(), io::Error> {
         
         match self.parse_lhs() {
-            Ok(mut variable) => {
+            Ok(variable) => {
                 // successs parsing the type..
                 if match_lexer_token(self.lexer.next()).token_type == TokenT::EQUAL__ {
                     self.lexer.chop();

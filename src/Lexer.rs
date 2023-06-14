@@ -148,8 +148,8 @@ impl<'a> KasperLexer<'a> {
         let mut c: char = self.get_current();
         
         // check for '/' in the next char, if it is not '/' then error.
-        
-        if c == DIV {
+        if c == DIV 
+        {
             token.token_type = TokenT::COMMENT__; 
 
             while c != NL {
@@ -212,7 +212,7 @@ impl<'a> KasperLexer<'a> {
     }
 
     pub fn match_current(&mut self, token: &mut Token) -> Result<(), io::Error> {
-        let mut c: char = self.get_current();
+        let c: char = self.get_current();
         // it is a known token.
         token.loc.change_loc(self.row, self.col);
         
@@ -220,18 +220,16 @@ impl<'a> KasperLexer<'a> {
             self.write_to_special_token(token, c);
             
             if token.token_type == TokenT::DIV__ {
-                let result = self.handle_comment(token);
+                return self.handle_comment(token);
             }
             
             return Ok(());
         }
 
         if c.is_ascii_punctuation() {
-                       
             token.write(c);
             token.token_type = TokenT::NONE__;
             self.chop();
-        
         }
 
         return Ok(());
@@ -324,11 +322,14 @@ impl<'a> KasperLexer<'a> {
         match res {
             Err(e) => return Err(e),
             Ok(()) => {
-                let mut prev: char = self.get_prev();
-                let mut c: char    = self.get_current();
+                let mut c: char = self.get_current();
                 
                 if token.token_type == TokenT::DQUOTE__ {
+                    let mut prev: char = '.';
+                    
                     while self.is_not_empty() {
+                        prev = self.get_prev();
+
                         if prev == ESCAPE {
                             match c {
                                 '\"' => {
@@ -359,8 +360,7 @@ impl<'a> KasperLexer<'a> {
                             }
                             
                             self.chop();
-                            prev = c.clone();
-                            c = self.get_current();
+                            c = self.get_current();    
                         }
 
                         if c == DQUOTE {
@@ -368,17 +368,18 @@ impl<'a> KasperLexer<'a> {
                             self.chop();
                             return Ok(token);
                         }
+
                         if c != ESCAPE {
                             token.write(c);
                         }
                         
                         self.chop();
                         prev = c.clone();
-                        c = self.get_current();
+                        c    = self.get_current();
                     }
                     
                     // We did not find the terminating quote ?
-                    let mut err_text = format!("{}:{}:{} Interminated string literal.", self.file_path, token.loc.row, token.loc.col);
+                    let mut err_text = format!("{}:{}:{} Interminated string literal prev: {} Current: {}.", self.file_path, token.loc.row, token.loc.col, prev, c);
                     err_text    += &format!("Add \" to terminate the string..");
                     return Err(make_error(&err_text));
                 }

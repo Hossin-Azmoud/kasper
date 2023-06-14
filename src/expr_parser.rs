@@ -7,13 +7,14 @@ use crate::enums::{ TokenT, make_prec_table };
 use std::collections::HashMap;
 use crate::stack::*;
 
+
 pub struct ArithmaticParser {
     pub iostack: Vec<Token>,
-    pub PrecTable: HashMap<String, i32>
+    pub prec_table: HashMap<String, i32>
 }
 
-fn is_parent(T: TokenT) -> bool {
-    return T == TokenT::OPAR__ || T == TokenT::CPAR__;
+fn is_parent(operand: TokenT) -> bool {
+    return operand == TokenT::OPAR__ || operand == TokenT::CPAR__;
 }
 
 impl ArithmaticParser {
@@ -21,26 +22,26 @@ impl ArithmaticParser {
     pub fn new() -> Self {
         ArithmaticParser { 
             iostack: Vec::new(),
-            PrecTable: make_prec_table(),
+            prec_table: make_prec_table(),
         }
     }
 
-    pub fn dump_stack(&mut self) {
+    pub fn _dump_stack(&mut self) {
         for i in 0..self.iostack.len() {
             print!("{} ", self.iostack[i].value);
             
         }
         println!();
     }
-    
-    pub fn dump_res_stack(&mut self, res: &Vec<f64>) {
+
+    pub fn _dump_res_stack(&mut self, res: &Vec<f64>) {
         for i in 0..res.len() {
             print!("{} ", res[i]);
             
         }
         println!();
     }
-    
+
     pub fn read_expression(&mut self, lex: &mut KasperLexer, mem_stack: &mut Stack) -> Result<f64, io::Error> {
         match self.postfix(lex) {
             Ok(()) => {
@@ -55,18 +56,16 @@ impl ArithmaticParser {
     }
 
     pub fn postfix(&mut self, lex: &mut KasperLexer) -> Result<(), io::Error> {
-        let mut tmp: Vec<Token> = Vec::new();
-
-        
-        while lex.is_not_empty() {
-             
-            let mut token = match_lexer_token(lex.next());
+        let mut tmp: Vec<Token> = Vec::new();        
+      
+        while lex.is_not_empty() {     
+            let token = match_lexer_token(lex.next()); // Next Token.
+            let prev = tmp.last_mut().cloned(); // An Option...
+ 
             if token.token_type == TokenT::NL__ {
                 break;
             }
             
-            let mut prev = tmp.last_mut().cloned(); // An Option...
-            // self.dump_stack();
             if token.token_type == TokenT::COMMENT__ {
                 continue;
             }
@@ -141,6 +140,7 @@ impl ArithmaticParser {
                 
                 tmp.push(token);
             }
+            
 
         }
         
@@ -165,21 +165,20 @@ impl ArithmaticParser {
     }
     
     pub fn is_greater(&mut self, f: &String, s: &String) -> bool {
-
-        return self.PrecTable[f] > self.PrecTable[s];
+        return self.prec_table[f] > self.prec_table[s];
     }
     pub fn is_less_eq(&mut self, f: &String, s: &String) -> bool {
-        return self.PrecTable[f] <= self.PrecTable[s];
+        return self.prec_table[f] <= self.prec_table[s];
     }
 
     pub fn is_in_prec(&mut self, s: &String) -> bool {
-        return self.PrecTable.contains_key(s);
+        return self.prec_table.contains_key(s);
     }
-
+/*
     pub fn clear_stack(&mut self) {
         self.iostack = Vec::new();
     }
-    
+*/    
     pub fn evaluate(&mut self, mem_stack: &mut Stack) -> Result<f64, io::Error> {
         let mut res: Vec<f64> = Vec::new();
  
@@ -209,8 +208,14 @@ impl ArithmaticParser {
                 } 
                 
                 if l.token_type == TokenT::DIV__ {
+                    
                     if a == 0.0 {
-                        return Err(make_error("Division by zero Error."));
+                        let err = format!("{}:{} Division by zero Error.", 
+                                    l.loc.row, 
+                                    l.loc.col
+                            );
+
+                        return Err(make_error(&err));
                     }
                     
                     res.push(b / a);  
@@ -222,7 +227,12 @@ impl ArithmaticParser {
                     continue;
                 } 
                 
-                let err = format!("Unsupported operand {}", l.value);
+                let err = format!("{}:{} Unsupported operand {}", 
+                              l.loc.row, 
+                              l.loc.col, 
+                              l.value
+                        );
+
                 return Err(make_error(&err));
             }
             
@@ -241,10 +251,12 @@ impl ArithmaticParser {
             if l.token_type == TokenT::VARNAME__ {
                 // find the value then push it..
                 match mem_stack.get_int(&l.value) {
+                    
                     Some(val) => {
                         res.push(val);
                         continue;
                     },
+
                     None      => return Err(make_error(&undef))
                 }
             }
@@ -257,7 +269,6 @@ impl ArithmaticParser {
         let err = format!("Value was lost in the stack.");
         return Err(make_error(&err));
     }
-
 }
 
 
