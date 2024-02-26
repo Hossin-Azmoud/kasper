@@ -37,8 +37,6 @@ impl Variable {
         }
 
     }
-    
-
 
     pub fn is_number(&mut self) -> bool {
         return self.declared_type == TokenT::FLOAT__  || self.declared_type == TokenT::INT_T  || self.declared_type == TokenT::INT_T_64;

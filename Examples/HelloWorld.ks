@@ -1,4 +1,2 @@
-print("Hello, kasper")
-
-
-
+write("Hello, kasper")
+write("Hello, kasper")

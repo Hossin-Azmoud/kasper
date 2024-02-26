@@ -15,9 +15,7 @@ use std::io;
 
 #[allow(unused_variables)]
 fn main() -> Result<(), io::Error> {
-    // return test_lexer();
-    // Command line args
-    
+   
     let args: Vec<String> = env::args().collect();
     let program = &args[0];
     

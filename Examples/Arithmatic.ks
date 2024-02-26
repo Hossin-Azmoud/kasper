@@ -1,5 +1,6 @@
 
 // Arithmatic Example. STIL NOT IMPLEMENTED. 
-define j -> int = 1 + 1
+define x -> int = (13)
+define j -> int = (20 + x)
 
-print(j) // (2)
+write(j) // (2)
