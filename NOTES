@@ -1,0 +1,16 @@
+
+- This project is completely wrong because it works like this:
+    1 - read source into buff // Correct
+    2 - lexical analyze the source // Correct
+    3 - parse and as u parse u evaluate... // which is wrong >_<
+PROB:
+    The problem now is that the kasper interpreter does not parse things correctly,
+    I need to make an ast tree. then pass the tree into the evalualtor to execute the code.
+
+TODO:
+    [] Learn recursive descent parsing.
+    [] make a simple recursive descent parser.
+    [] make an evaluator.
+
+GOAL:
+    ... (idk `:(` )

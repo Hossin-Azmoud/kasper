@@ -12,11 +12,11 @@ define y  -> i64 = 64
 define t -> bool = True
 define f -> bool = False
 
-print(name)
-print(x)
-print(y)
-print(t)
-print(f)
+write(name)
+write(x)
+write(y)
+write(t)
+write(f)
 
 
 
